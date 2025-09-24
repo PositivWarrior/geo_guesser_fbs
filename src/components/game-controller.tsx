@@ -49,12 +49,12 @@ const GameController = () => {
   const handleGuess = (e: React.FormEvent) => {
     e.preventDefault();
     if (!inputValue.trim()) return;
-
+  
     const normalizedGuess = normalizeString(inputValue);
     const targetIndex = targetCountries.findIndex(
       c => normalizeString(c.name) === normalizedGuess || c.aliases.some(alias => normalizeString(alias) === normalizedGuess)
     );
-
+  
     if (targetIndex !== -1) {
       const target = targetCountries[targetIndex];
       if (target.guessed) {
@@ -178,7 +178,7 @@ const GameController = () => {
         </Card>
         <Card className="w-full">
           <CardContent className="p-2 sm:p-4">
-           <WorldMap 
+           <WorldMap
               key={currentContinent.id}
               countries={targetCountries}
               mode={currentContinent.id}
@@ -221,5 +221,3 @@ const GameController = () => {
 };
 
 export default GameController;
-
-    
