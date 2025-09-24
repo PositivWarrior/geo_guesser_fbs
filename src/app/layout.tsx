@@ -4,8 +4,8 @@ import { Toaster } from '@/components/ui/toaster';
 import { cn } from '@/lib/utils';
 
 export const metadata: Metadata = {
-  title: 'Geo Explorer',
-  description: 'A geographical guessing game',
+  title: 'GeoGuesser',
+  description: 'The world is your oyster. How many countries can you guess?',
 };
 
 export default function RootLayout({

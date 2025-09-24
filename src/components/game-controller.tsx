@@ -137,7 +137,7 @@ const GameController = () => {
         <div className="flex items-center gap-3">
           <Compass className="w-10 h-10 text-primary" />
           <h1 className="text-3xl sm:text-4xl font-headline font-bold text-foreground">
-            Geo Explorer
+            GeoGuesser
           </h1>
         </div>
         <div className="flex items-center space-x-4">

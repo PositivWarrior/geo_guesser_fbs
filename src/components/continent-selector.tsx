@@ -33,7 +33,7 @@ export function ContinentSelector({ continents, unlockedContinents, onSelect }: 
         <div className="flex justify-center items-center gap-4 mb-2">
             <Compass className="w-12 h-12 text-primary" />
         </div>
-        <CardTitle className="text-4xl font-headline">Geo Explorer</CardTitle>
+        <CardTitle className="text-4xl font-headline">GeoGuesser</CardTitle>
         <CardDescription className="text-lg">Select a continent to begin your adventure!</CardDescription>
       </CardHeader>
       <CardContent>
