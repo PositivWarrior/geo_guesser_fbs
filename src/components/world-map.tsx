@@ -44,8 +44,8 @@ export function WorldMap({
         return 'hsl(120 60% 45%)';
     }
     
-    const isCountryInPlay = allCountries.some(c => c.iso2 === geo.properties.ISO_A2 && c.continent === (countries[0]?.continent || ''));
-    if (mode !== 'all-world' && !isCountryInPlay) {
+    // Check if country is part of the current continent challenge
+    if (mode !== 'all-world' && countries.length > 0 && !countries.some(c => c.iso2 === geo.properties.ISO_A2)) {
       return 'hsl(var(--muted-foreground) / 0.3)';
     }
 
@@ -125,3 +125,5 @@ export function WorldMap({
     </div>
   );
 };
+
+    
