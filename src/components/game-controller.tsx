@@ -158,8 +158,8 @@ const GameController = () => {
       </header>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 flex flex-col gap-6">
-          <Card className="order-last lg:order-first">
+        <div className="lg:col-span-1 flex flex-col gap-6 order-2 lg:order-1">
+          <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-xl font-headline">
                 <ShieldQuestion />
@@ -189,22 +189,11 @@ const GameController = () => {
               </form>
             </CardContent>
           </Card>
-          
-           <Card className="w-full order-first lg:order-last">
-            <CardContent className="p-2 sm:p-4">
-             <WorldMap 
-                key={currentContinent.id}
-                guessedCountries={guessedCountries}
-                gameContinent={currentContinent.name}
-                mode={currentContinent.id}
-              />
-            </CardContent>
-          </Card>
         </div>
 
-        <div className="lg:col-span-1 flex flex-col gap-6">
-          <Card>
-            <CardContent className="grid grid-cols-2 lg:grid-cols-1 gap-4 text-center p-6">
+        <div className="lg:col-span-2 flex flex-col gap-6 order-1 lg:order-2">
+           <Card>
+            <CardContent className="grid grid-cols-2 lg:grid-cols-2 gap-4 text-center p-6">
               <div className="flex flex-col items-center justify-center p-4 bg-secondary rounded-lg">
                 <Timer className="w-8 h-8 mb-2 text-primary" />
                 <span className="text-3xl font-bold font-mono">{formatTime(timeLeft)}</span>
@@ -215,6 +204,16 @@ const GameController = () => {
                 <span className="text-3xl font-bold font-mono">{score}/{total}</span>
                 <span className="text-sm text-muted-foreground">Countries</span>
               </div>
+            </CardContent>
+          </Card>
+           <Card className="w-full">
+            <CardContent className="p-2 sm:p-4">
+             <WorldMap 
+                key={currentContinent.id}
+                guessedCountries={guessedCountries}
+                gameContinent={currentContinent.name}
+                mode={currentContinent.id}
+              />
             </CardContent>
           </Card>
         </div>
