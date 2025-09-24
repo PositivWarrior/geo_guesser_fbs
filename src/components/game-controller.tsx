@@ -157,29 +157,9 @@ const GameController = () => {
         </div>
       </header>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2">
-           <Card className="w-full">
-            <CardContent className="p-2 sm:p-4">
-             <WorldMap 
-                guessedCountries={guessedCountries} 
-                allCountries={countries} 
-                targetCountries={targetCountries.map(c => c.iso2)}
-                mode={currentContinent.id}
-              />
-            </CardContent>
-          </Card>
-        </div>
-
-        <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-6">
           <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-xl font-headline">
-                <GitBranch />
-                <span>Game Stats</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="grid grid-cols-2 gap-4 text-center">
+            <CardContent className="grid grid-cols-2 gap-4 text-center p-6">
               <div className="flex flex-col items-center justify-center p-4 bg-secondary rounded-lg">
                 <Timer className="w-8 h-8 mb-2 text-primary" />
                 <span className="text-3xl font-bold font-mono">{formatTime(timeLeft)}</span>
@@ -192,7 +172,18 @@ const GameController = () => {
               </div>
             </CardContent>
           </Card>
-
+      
+           <Card className="w-full">
+            <CardContent className="p-2 sm:p-4">
+             <WorldMap 
+                guessedCountries={guessedCountries} 
+                allCountries={countries} 
+                targetCountries={targetCountries.map(c => c.iso2)}
+                mode={currentContinent.id}
+              />
+            </CardContent>
+          </Card>
+        
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-xl font-headline">
@@ -223,7 +214,6 @@ const GameController = () => {
               </form>
             </CardContent>
           </Card>
-        </div>
       </div>
     </div>
   );
