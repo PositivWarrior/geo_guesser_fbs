@@ -40,13 +40,20 @@ export function WorldMap({
   const getCountryColor = (geo: any) => {
     const countryInGame = countries.find(c => c.iso2 === geo.properties.ISO_A2);
 
-    if (!countryInGame) {
-        return 'hsl(var(--muted-foreground) / 0.3)';
-    }
-    if (countryInGame.guessed) {
+    if (countryInGame?.guessed) {
         return 'hsl(120 60% 45%)';
     }
-    return 'hsl(var(--card-foreground) / 0.3)';
+    
+    const isCountryInPlay = allCountries.some(c => c.iso2 === geo.properties.ISO_A2 && c.continent === (countries[0]?.continent || ''));
+    if (mode !== 'all-world' && !isCountryInPlay) {
+      return 'hsl(var(--muted-foreground) / 0.3)';
+    }
+
+    if (countryInGame) {
+      return 'hsl(var(--card-foreground) / 0.3)';
+    }
+    
+    return 'hsl(var(--muted-foreground) / 0.3)';
   };
 
   return (
@@ -64,7 +71,8 @@ export function WorldMap({
               {({ geographies }) =>
                 geographies.map((geo) => {
                   const country = allCountries.find(c => c.iso2 === geo.properties.ISO_A2);
-                  const isGuessed = countries.find(c => c.iso2 === geo.properties.ISO_A2)?.guessed;
+                  const countryInGame = countries.find(c => c.iso2 === geo.properties.ISO_A2);
+                  const isGuessed = countryInGame?.guessed;
                   const color = getCountryColor(geo);
 
                   return (
@@ -82,7 +90,7 @@ export function WorldMap({
                               hover: {
                                 fill: isGuessed 
                                   ? "hsl(120 60% 55%)"
-                                  : country
+                                  : countryInGame
                                   ? "hsl(var(--accent))"
                                   : "hsl(var(--muted) / 0.5)",
                                 stroke: "hsl(var(--ring))",
@@ -98,7 +106,7 @@ export function WorldMap({
                           }}
                         />
                       </TooltipTrigger>
-                      {country && (
+                      {country && countryInGame && (
                         <TooltipContent>
                           <p className="font-medium">{country.name}</p>
                           {isGuessed && (
