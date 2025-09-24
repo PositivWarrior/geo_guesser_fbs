@@ -7,9 +7,8 @@ import {
   ZoomableGroup,
 } from "react-simple-maps";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Country } from "@/lib/countries";
+import type { Country } from "@/lib/countries";
 import { cn } from "@/lib/utils";
-
 
 interface WorldMapProps {
   guessedCountries: string[];
@@ -28,10 +27,6 @@ export function WorldMap({
 }: WorldMapProps) {
   const [tooltipContent, setTooltipContent] = useState<string | null>(null);
 
-  const getCountryByIso2 = (iso2: string) => {
-    return allCountries.find(c => c.iso2 === iso2);
-  }
-
   const getMapConfig = () => {
     const configs = {
       europe: { center: [15, 54] as [number, number], scale: 600 },
@@ -43,7 +38,8 @@ export function WorldMap({
       'all-world': { center: [10, 20] as [number, number], scale: 150 }
     };
     
-    return configs[mode as keyof typeof configs] || configs['all-world'];
+    const key = mode as keyof typeof configs;
+    return configs[key] || configs['all-world'];
   };
 
   const mapConfig = getMapConfig();
@@ -63,8 +59,8 @@ export function WorldMap({
             {({ geographies }) =>
               geographies.map((geo) => {
                 const country = allCountries.find(c => c.iso2 === geo.properties.ISO_A2);
-                const isGuessed = country ? guessedCountries.includes(country.iso2) : false;
-                const isTarget = country ? targetCountries.includes(country.iso2) : false;
+                const isGuessed = !!country && guessedCountries.includes(country.iso2);
+                const isTarget = !!country && targetCountries.includes(country.iso2);
                 
                 return (
                   <Tooltip key={geo.rsmKey}>
@@ -98,7 +94,7 @@ export function WorldMap({
                         }}
                       />
                     </TooltipTrigger>
-                    {tooltipContent && tooltipContent === country?.name && (
+                    {tooltipContent && country && tooltipContent === country.name && (
                       <TooltipContent>
                         <p className="font-medium">{tooltipContent}</p>
                       </TooltipContent>
