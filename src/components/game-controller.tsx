@@ -28,7 +28,7 @@ const GameController = () => {
   const [inputValue, setInputValue] = useState("");
   const { toast } = useToast();
 
-  const unlockedContinents = ["Europe"]; // Mock for IAP
+  const unlockedContinents = ["Europe", "Asia", "Africa", "North America", "South America", "Oceania"];
 
   const startGame = (continent: Continent) => {
     setCurrentContinent(continent);
@@ -52,21 +52,23 @@ const GameController = () => {
   
     const normalizedGuess = normalizeString(inputValue);
     const targetIndex = targetCountries.findIndex(
-      c => normalizeString(c.name) === normalizedGuess || c.aliases.some(alias => normalizeString(alias) === normalizedGuess)
+      c => !c.guessed && (normalizeString(c.name) === normalizedGuess || c.aliases.some(alias => normalizeString(alias) === normalizedGuess))
     );
   
     if (targetIndex !== -1) {
-      const target = targetCountries[targetIndex];
-      if (target.guessed) {
-        toast({ title: "Already Guessed!", description: `You've already found ${target.name}.`, variant: "default" });
-      } else {
-        const newTargetCountries = [...targetCountries];
-        newTargetCountries[targetIndex] = { ...target, guessed: true };
-        setTargetCountries(newTargetCountries);
-        toast({ title: "Correct!", description: `You've guessed ${target.name}.`, variant: "default" });
-      }
+      const newTargetCountries = [...targetCountries];
+      newTargetCountries[targetIndex] = { ...newTargetCountries[targetIndex], guessed: true };
+      setTargetCountries(newTargetCountries);
+      toast({ title: "Correct!", description: `You've guessed ${newTargetCountries[targetIndex].name}.`, variant: "default" });
     } else {
-      toast({ title: "Incorrect", description: "That's not a recognized country. Try again!", variant: "destructive" });
+        const alreadyGuessed = targetCountries.find(
+            c => normalizeString(c.name) === normalizedGuess || c.aliases.some(alias => normalizeString(alias) === normalizedGuess)
+        )
+        if (alreadyGuessed) {
+            toast({ title: "Already Guessed!", description: `You've already found ${alreadyGuessed.name}.`, variant: "default" });
+        } else {
+            toast({ title: "Incorrect", description: "That's not a recognized country. Try again!", variant: "destructive" });
+        }
     }
     setInputValue("");
   };
@@ -160,22 +162,22 @@ const GameController = () => {
           </Button>
         </div>
       </header>
+       <Card>
+        <CardContent className="grid grid-cols-2 lg:grid-cols-2 gap-4 text-center p-6">
+          <div className="flex flex-col items-center justify-center p-4 bg-secondary rounded-lg">
+            <Timer className="w-8 h-8 mb-2 text-primary" />
+            <span className="text-3xl font-bold font-mono">{formatTime(timeLeft)}</span>
+            <span className="text-sm text-muted-foreground">Time Left</span>
+          </div>
+          <div className="flex flex-col items-center justify-center p-4 bg-secondary rounded-lg">
+            <Check className="w-8 h-8 mb-2 text-accent" />
+            <span className="text-3xl font-bold font-mono">{guessedCount}/{total}</span>
+            <span className="text-sm text-muted-foreground">Countries</span>
+          </div>
+        </CardContent>
+      </Card>
 
       <div className="grid grid-cols-1 gap-6">
-         <Card>
-          <CardContent className="grid grid-cols-2 lg:grid-cols-2 gap-4 text-center p-6">
-            <div className="flex flex-col items-center justify-center p-4 bg-secondary rounded-lg">
-              <Timer className="w-8 h-8 mb-2 text-primary" />
-              <span className="text-3xl font-bold font-mono">{formatTime(timeLeft)}</span>
-              <span className="text-sm text-muted-foreground">Time Left</span>
-            </div>
-            <div className="flex flex-col items-center justify-center p-4 bg-secondary rounded-lg">
-              <Check className="w-8 h-8 mb-2 text-accent" />
-              <span className="text-3xl font-bold font-mono">{guessedCount}/{total}</span>
-              <span className="text-sm text-muted-foreground">Countries</span>
-            </div>
-          </CardContent>
-        </Card>
         <Card className="w-full">
           <CardContent className="p-2 sm:p-4">
            <WorldMap

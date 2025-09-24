@@ -1,4 +1,6 @@
 "use client";
+
+import { useState } from "react";
 import {
   ComposableMap,
   Geographies,
@@ -6,10 +8,11 @@ import {
   ZoomableGroup,
 } from "react-simple-maps";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { countries as allCountries, type Country } from "@/lib/countries";
+import { type Country } from "@/lib/countries";
 
 interface WorldMapProps {
   countries: Country[];
+  onCountryHover?: (countryName: string | null) => void;
   mode?: string;
 }
 
@@ -17,8 +20,31 @@ const geoUrl = "https://unpkg.com/world-atlas@2/countries-110m.json";
 
 export function WorldMap({
   countries,
+  onCountryHover,
   mode = "all-world"
 }: WorldMapProps) {
+  const [tooltipContent, setTooltipContent] = useState<string | null>(null);
+  const [hoveredCountry, setHoveredCountry] = useState<string | null>(null);
+
+
+  const getCountryFromGeo = (geo: any) => {
+    return countries.find(c => c.iso2 === geo.properties.ISO_A2);
+  };
+
+  const getCountryColor = (geo: any) => {
+    const country = getCountryFromGeo(geo);
+    
+    if (country?.guessed) {
+      return "hsl(120 60% 45%)";
+    }
+    
+    const isCountryInGame = countries.some(c => c.iso2 === geo.properties.ISO_A2);
+    if (!isCountryInGame) {
+      return "hsl(var(--muted-foreground) / 0.3)";
+    }
+    
+    return "hsl(var(--card-foreground) / 0.3)";
+  };
 
   const getMapConfig = () => {
     const configs = {
@@ -35,30 +61,26 @@ export function WorldMap({
     return configs[key] || configs['all-world'];
   };
 
-  const mapConfig = getMapConfig();
-
-  const getCountryColor = (geo: any) => {
-    const countryInGame = countries.find(c => c.iso2 === geo.properties.ISO_A2);
-
-    if (countryInGame?.guessed) {
-        return 'hsl(120 60% 45%)';
+  const handleMouseEnter = (geo: any) => {
+    const country = getCountryFromGeo(geo);
+    if (country) {
+      setTooltipContent(country.name);
+      setHoveredCountry(country.name);
+      onCountryHover?.(country.name);
     }
-    
-    // Check if country is part of the current continent challenge
-    if (mode !== 'all-world' && countries.length > 0 && !countries.some(c => c.iso2 === geo.properties.ISO_A2)) {
-      return 'hsl(var(--muted-foreground) / 0.3)';
-    }
-
-    if (countryInGame) {
-      return 'hsl(var(--card-foreground) / 0.3)';
-    }
-    
-    return 'hsl(var(--muted-foreground) / 0.3)';
   };
 
+  const handleMouseLeave = () => {
+    setTooltipContent(null);
+    setHoveredCountry(null);
+    onCountryHover?.(null);
+  };
+
+  const mapConfig = getMapConfig();
+
   return (
-    <div className="w-full h-full aspect-video bg-card flex items-center justify-center overflow-hidden border rounded-lg">
-       <TooltipProvider>
+    <div className="w-full h-full bg-card rounded-md border border-border overflow-hidden">
+      <TooltipProvider>
         <ComposableMap
           projectionConfig={{
             scale: mapConfig.scale,
@@ -70,46 +92,45 @@ export function WorldMap({
             <Geographies geography={geoUrl}>
               {({ geographies }) =>
                 geographies.map((geo) => {
-                  const country = allCountries.find(c => c.iso2 === geo.properties.ISO_A2);
-                  const countryInGame = countries.find(c => c.iso2 === geo.properties.ISO_A2);
-                  const isGuessed = countryInGame?.guessed;
-                  const color = getCountryColor(geo);
-
+                  const country = getCountryFromGeo(geo);
+                  
                   return (
                     <Tooltip key={geo.rsmKey}>
                       <TooltipTrigger asChild>
                         <Geography
                           geography={geo}
+                          onMouseEnter={() => handleMouseEnter(geo)}
+                          onMouseLeave={handleMouseLeave}
                           style={{
-                              default: {
-                                fill: color,
-                                stroke: "hsl(var(--background))",
-                                strokeWidth: 0.5,
-                                outline: "none",
-                              },
-                              hover: {
-                                fill: isGuessed 
-                                  ? "hsl(120 60% 55%)"
-                                  : countryInGame
-                                  ? "hsl(var(--accent))"
-                                  : "hsl(var(--muted) / 0.5)",
-                                stroke: "hsl(var(--ring))",
-                                strokeWidth: 1,
-                                outline: "none",
-                              },
-                              pressed: {
-                                fill: "hsl(var(--accent))",
-                                stroke: "hsl(var(--ring))",
-                                strokeWidth: 1,
-                                outline: "none",
-                              },
+                            default: {
+                              fill: getCountryColor(geo),
+                              stroke: "hsl(var(--background))",
+                              strokeWidth: 0.5,
+                              outline: "none",
+                            },
+                            hover: {
+                              fill: country?.guessed 
+                                ? "hsl(120 60% 55%)"
+                                : country
+                                ? "hsl(var(--accent))"
+                                : "hsl(var(--muted) / 0.5)",
+                              stroke: "hsl(var(--ring))",
+                              strokeWidth: 1,
+                              outline: "none",
+                            },
+                            pressed: {
+                              fill: "hsl(var(--accent))",
+                              stroke: "hsl(var(--ring))",
+                              strokeWidth: 1,
+                              outline: "none",
+                            },
                           }}
                         />
                       </TooltipTrigger>
-                      {country && countryInGame && (
+                      {tooltipContent && hoveredCountry === country?.name && (
                         <TooltipContent>
-                          <p className="font-medium">{country.name}</p>
-                          {isGuessed && (
+                          <p className="font-medium">{tooltipContent}</p>
+                          {country?.guessed && (
                             <p className="text-xs text-muted-foreground">✓ Guessed</p>
                           )}
                         </TooltipContent>
@@ -121,7 +142,7 @@ export function WorldMap({
             </Geographies>
           </ZoomableGroup>
         </ComposableMap>
-       </TooltipProvider>
+      </TooltipProvider>
     </div>
   );
-};
+}
