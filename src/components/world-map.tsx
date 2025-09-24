@@ -1,47 +1,116 @@
-// This component is intentionally simplified for brevity.
-// A real-world implementation would dynamically load a large SVG
-// and handle pan/zoom, which is beyond the scope of this example.
-// The SVG paths should have `id` attributes matching country ISO2 codes.
-
 "use client";
-import type { Country } from '@/lib/countries';
-import { cn } from '@/lib/utils';
-import React from 'react';
+import { useState } from "react";
+import {
+  ComposableMap,
+  Geographies,
+  Geography,
+  ZoomableGroup,
+} from "react-simple-maps";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Country } from "@/lib/countries";
+import { cn } from "@/lib/utils";
+
 
 interface WorldMapProps {
   guessedCountries: string[];
-  allCountries: Country[];
   targetCountries: string[];
+  allCountries: Country[];
+  mode?: string;
 }
 
-export const WorldMap: React.FC<WorldMapProps> = ({ guessedCountries, allCountries, targetCountries }) => {
-  const isTarget = (iso2: string) => targetCountries.includes(iso2);
-  const isGuessed = (iso2: string) => guessedCountries.includes(iso2);
+const geoUrl = "https://unpkg.com/world-atlas@2/countries-110m.json";
+
+export function WorldMap({
+  guessedCountries,
+  targetCountries,
+  allCountries,
+  mode = "all-world"
+}: WorldMapProps) {
+  const [tooltipContent, setTooltipContent] = useState<string | null>(null);
+
+  const getCountryByIso2 = (iso2: string) => {
+    return allCountries.find(c => c.iso2 === iso2);
+  }
+
+  const getMapConfig = () => {
+    const configs = {
+      europe: { center: [15, 54] as [number, number], scale: 600 },
+      asia: { center: [90, 30] as [number, number], scale: 400 },
+      africa: { center: [20, 2] as [number, number], scale: 400 },
+      'north-america': { center: [-90, 40] as [number, number], scale: 400 },
+      'south-america': { center: [-60, -20] as [number, number], scale: 350 },
+      oceania: { center: [135, -25] as [number, number], scale: 450 },
+      'all-world': { center: [10, 20] as [number, number], scale: 150 }
+    };
+    
+    return configs[mode as keyof typeof configs] || configs['all-world'];
+  };
+
+  const mapConfig = getMapConfig();
 
   return (
-    <div className="w-full h-full aspect-video bg-card flex items-center justify-center overflow-hidden">
-      <svg
-        version="1.1"
-        xmlns="http://www.w3.org/2000/svg"
-        viewBox="0 0 1000 500.5"
-        className="w-full h-auto"
+    <div className="w-full h-full aspect-video bg-card flex items-center justify-center overflow-hidden border rounded-lg">
+       <TooltipProvider>
+      <ComposableMap
+        projectionConfig={{
+          scale: mapConfig.scale,
+          rotation: [-10,0,0]
+        }}
+        className="w-full h-full"
       >
-        {/* In a real app, you would map over a GeoJSON or similar data source to generate these paths. */}
-        {/* For this example, a small subset is shown. The full app would contain all countries. */}
-        {allCountries.map(country => (
-          <path
-            key={country.iso2}
-            id={country.iso2}
-            className={cn('country', {
-              'guessed': isGuessed(country.iso2),
-              'unguessed': isTarget(country.iso2) && !isGuessed(country.iso2),
-              'locked': !isTarget(country.iso2),
-            })}
-            d={country.path} // Assuming your country data has an SVG path 'd' attribute
-            aria-label={country.name}
-          />
-        ))}
-      </svg>
+        <ZoomableGroup center={mapConfig.center}>
+          <Geographies geography={geoUrl}>
+            {({ geographies }) =>
+              geographies.map((geo) => {
+                const country = allCountries.find(c => c.iso2 === geo.properties.ISO_A2);
+                const isGuessed = country ? guessedCountries.includes(country.iso2) : false;
+                const isTarget = country ? targetCountries.includes(country.iso2) : false;
+                
+                return (
+                  <Tooltip key={geo.rsmKey}>
+                    <TooltipTrigger asChild>
+                      <Geography
+                        geography={geo}
+                        onMouseEnter={() => {
+                          if (country) setTooltipContent(country.name);
+                        }}
+                        onMouseLeave={() => {
+                          setTooltipContent(null);
+                        }}
+                        className={cn('country outline-none', {
+                          'guessed': isGuessed,
+                          'unguessed': isTarget && !isGuessed,
+                          'locked': !isTarget
+                        })}
+                        style={{
+                           hover: {
+                              fill: "hsl(var(--accent))",
+                              stroke: "hsl(var(--ring))",
+                              strokeWidth: 1,
+                              outline: "none",
+                            },
+                            pressed: {
+                              fill: "hsl(var(--accent))",
+                              stroke: "hsl(var(--ring))",
+                              strokeWidth: 1,
+                              outline: "none",
+                            },
+                        }}
+                      />
+                    </TooltipTrigger>
+                    {tooltipContent && tooltipContent === country?.name && (
+                      <TooltipContent>
+                        <p className="font-medium">{tooltipContent}</p>
+                      </TooltipContent>
+                    )}
+                  </Tooltip>
+                );
+              })
+            }
+          </Geographies>
+        </ZoomableGroup>
+      </ComposableMap>
+       </TooltipProvider>
     </div>
   );
 };

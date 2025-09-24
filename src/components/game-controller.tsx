@@ -161,7 +161,12 @@ const GameController = () => {
         <div className="lg:col-span-2">
            <Card className="w-full">
             <CardContent className="p-2 sm:p-4">
-             <WorldMap guessedCountries={guessedCountries} allCountries={countries} targetCountries={targetCountries.map(c => c.iso2)} />
+             <WorldMap 
+                guessedCountries={guessedCountries} 
+                allCountries={countries} 
+                targetCountries={targetCountries.map(c => c.iso2)}
+                mode={currentContinent.id}
+              />
             </CardContent>
           </Card>
         </div>
