@@ -7,12 +7,12 @@ import {
   ZoomableGroup,
 } from "react-simple-maps";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { countries as allCountries, type Country } from "@/lib/countries";
+import { countries as allCountries } from "@/lib/countries";
 import { cn } from "@/lib/utils";
 
 interface WorldMapProps {
   guessedCountries: string[];
-  targetCountries: string[];
+  gameContinent: string;
   mode?: string;
 }
 
@@ -20,7 +20,7 @@ const geoUrl = "https://unpkg.com/world-atlas@2/countries-110m.json";
 
 function WorldMapComponent({
   guessedCountries,
-  targetCountries,
+  gameContinent,
   mode = "all-world"
 }: WorldMapProps) {
 
@@ -41,6 +41,10 @@ function WorldMapComponent({
 
   const mapConfig = getMapConfig();
 
+  const targetCountriesISO = allCountries
+    .filter(c => gameContinent === 'All World' || c.continent === gameContinent)
+    .map(c => c.iso2);
+
   return (
     <div className="w-full h-full aspect-video bg-card flex items-center justify-center overflow-hidden border rounded-lg">
        <TooltipProvider>
@@ -57,7 +61,7 @@ function WorldMapComponent({
               geographies.map((geo) => {
                 const country = allCountries.find(c => c.iso2 === geo.properties.ISO_A2);
                 const isGuessed = !!country && guessedCountries.includes(country.iso2);
-                const isTarget = !!country && targetCountries.includes(country.iso2);
+                const isTarget = !!country && targetCountriesISO.includes(country.iso2);
                 
                 return (
                   <Tooltip key={geo.rsmKey}>
