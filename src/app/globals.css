@@ -91,7 +91,7 @@ body {
   @apply fill-gray-600 stroke-background stroke-[0.5] transition-colors duration-300;
 }
 .country.guessed {
-  @apply fill-accent;
+  @apply fill-green-500;
 }
 .country.unguessed {
     @apply fill-muted-foreground/30;
