@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { memo } from "react";
 import {
   ComposableMap,
   Geographies,
@@ -7,25 +7,22 @@ import {
   ZoomableGroup,
 } from "react-simple-maps";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import type { Country } from "@/lib/countries";
+import { countries as allCountries, type Country } from "@/lib/countries";
 import { cn } from "@/lib/utils";
 
 interface WorldMapProps {
   guessedCountries: string[];
   targetCountries: string[];
-  allCountries: Country[];
   mode?: string;
 }
 
 const geoUrl = "https://unpkg.com/world-atlas@2/countries-110m.json";
 
-export function WorldMap({
+function WorldMapComponent({
   guessedCountries,
   targetCountries,
-  allCountries,
   mode = "all-world"
 }: WorldMapProps) {
-  const [tooltipContent, setTooltipContent] = useState<string | null>(null);
 
   const getMapConfig = () => {
     const configs = {
@@ -67,12 +64,6 @@ export function WorldMap({
                     <TooltipTrigger asChild>
                       <Geography
                         geography={geo}
-                        onMouseEnter={() => {
-                          if (country) setTooltipContent(country.name);
-                        }}
-                        onMouseLeave={() => {
-                          setTooltipContent(null);
-                        }}
                         className={cn('country outline-none', {
                           'guessed': isGuessed,
                           'unguessed': isTarget && !isGuessed,
@@ -94,9 +85,9 @@ export function WorldMap({
                         }}
                       />
                     </TooltipTrigger>
-                    {tooltipContent && country && tooltipContent === country.name && (
+                    {country && (
                       <TooltipContent>
-                        <p className="font-medium">{tooltipContent}</p>
+                        <p className="font-medium">{country.name}</p>
                       </TooltipContent>
                     )}
                   </Tooltip>
@@ -110,3 +101,5 @@ export function WorldMap({
     </div>
   );
 };
+
+export const WorldMap = memo(WorldMapComponent);

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { WorldMap } from '@/components/world-map';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,7 +8,7 @@ import { useToast } from '@/hooks/use-toast';
 import { continents, type Continent } from '@/lib/continents';
 import { countries, type Country } from '@/lib/countries';
 import { normalizeString } from '@/lib/game-logic';
-import { Timer, Check, Globe, GitBranch, Lock, Pause, Play, Redo, Award, ShieldQuestion } from 'lucide-react';
+import { Timer, Check, Globe, Pause, Play, ShieldQuestion } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Label } from './ui/label';
 import { Switch } from './ui/switch';
@@ -176,8 +176,7 @@ const GameController = () => {
            <Card className="w-full">
             <CardContent className="p-2 sm:p-4">
              <WorldMap 
-                guessedCountries={guessedCountries} 
-                allCountries={countries} 
+                guessedCountries={guessedCountries}
                 targetCountries={targetCountries.map(c => c.iso2)}
                 mode={currentContinent.id}
               />
