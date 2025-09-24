@@ -1,5 +1,4 @@
 "use client";
-import { memo } from "react";
 import {
   ComposableMap,
   Geographies,
@@ -106,4 +105,4 @@ function WorldMapComponent({
   );
 };
 
-export const WorldMap = memo(WorldMapComponent);
+export const WorldMap = WorldMapComponent;
