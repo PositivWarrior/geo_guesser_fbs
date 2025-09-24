@@ -23,7 +23,6 @@ const GameController = () => {
   const [gameState, setGameState] = useState<GameState>("menu");
   const [currentContinent, setCurrentContinent] = useState<Continent>(continents[0]);
   const [targetCountries, setTargetCountries] = useState<Country[]>([]);
-  const [guessedCountries, setGuessedCountries] = useState<string[]>([]);
   const [timeLeft, setTimeLeft] = useState(continents[0].time);
   const [isChallengeMode, setIsChallengeMode] = useState(false);
   const [inputValue, setInputValue] = useState("");
@@ -34,13 +33,14 @@ const GameController = () => {
   const startGame = (continent: Continent) => {
     setCurrentContinent(continent);
     setTimeLeft(continent.time);
-    setGuessedCountries([]);
     setInputValue("");
     let gameCountries;
     if (continent.id === "all-world") {
-      gameCountries = countries;
+      gameCountries = countries.map(c => ({ ...c, guessed: false }));
     } else {
-      gameCountries = countries.filter(c => c.continent === continent.name);
+      gameCountries = countries
+        .filter(c => c.continent === continent.name)
+        .map(c => ({ ...c, guessed: false }));
     }
     setTargetCountries(gameCountries);
     setGameState("playing");
@@ -51,15 +51,18 @@ const GameController = () => {
     if (!inputValue.trim()) return;
 
     const normalizedGuess = normalizeString(inputValue);
-    const target = targetCountries.find(
+    const targetIndex = targetCountries.findIndex(
       c => normalizeString(c.name) === normalizedGuess || c.aliases.some(alias => normalizeString(alias) === normalizedGuess)
     );
 
-    if (target) {
-      if (guessedCountries.includes(target.iso2)) {
+    if (targetIndex !== -1) {
+      const target = targetCountries[targetIndex];
+      if (target.guessed) {
         toast({ title: "Already Guessed!", description: `You've already found ${target.name}.`, variant: "default" });
       } else {
-        setGuessedCountries(prev => [...prev, target.iso2]);
+        const newTargetCountries = [...targetCountries];
+        newTargetCountries[targetIndex] = { ...target, guessed: true };
+        setTargetCountries(newTargetCountries);
         toast({ title: "Correct!", description: `You've guessed ${target.name}.`, variant: "default" });
       }
     } else {
@@ -90,6 +93,8 @@ const GameController = () => {
     setGameState("menu");
   };
 
+  const guessedCount = targetCountries.filter(c => c.guessed).length;
+
   useEffect(() => {
     if (gameState === "playing" && timeLeft > 0) {
       const timer = setInterval(() => {
@@ -102,10 +107,10 @@ const GameController = () => {
   }, [gameState, timeLeft]);
 
   useEffect(() => {
-    if (gameState === "playing" && targetCountries.length > 0 && guessedCountries.length === targetCountries.length) {
+    if (gameState === "playing" && targetCountries.length > 0 && guessedCount === targetCountries.length) {
       setGameState("finished");
     }
-  }, [guessedCountries, targetCountries, gameState]);
+  }, [guessedCount, targetCountries, gameState]);
 
 
   if (gameState === "menu") {
@@ -118,18 +123,17 @@ const GameController = () => {
     return `${minutes}:${secs < 10 ? '0' : ''}${secs}`;
   };
 
-  const score = guessedCountries.length;
   const total = targetCountries.length;
 
   return (
     <div className="w-full max-w-7xl mx-auto flex flex-col gap-6">
        <GameEndDialog
         isOpen={gameState === 'finished'}
-        score={score}
+        score={guessedCount}
         total={total}
         timeTaken={currentContinent.time - timeLeft}
         continentName={currentContinent.name}
-        missedCountries={targetCountries.filter(c => !guessedCountries.includes(c.iso2))}
+        missedCountries={targetCountries.filter(c => !c.guessed)}
         onRestart={() => startGame(currentContinent)}
         onMenu={resetGame}
       />
@@ -158,6 +162,31 @@ const GameController = () => {
       </header>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2 flex flex-col gap-6 order-1 lg:order-2">
+           <Card>
+            <CardContent className="grid grid-cols-2 lg:grid-cols-2 gap-4 text-center p-6">
+              <div className="flex flex-col items-center justify-center p-4 bg-secondary rounded-lg">
+                <Timer className="w-8 h-8 mb-2 text-primary" />
+                <span className="text-3xl font-bold font-mono">{formatTime(timeLeft)}</span>
+                <span className="text-sm text-muted-foreground">Time Left</span>
+              </div>
+              <div className="flex flex-col items-center justify-center p-4 bg-secondary rounded-lg">
+                <Check className="w-8 h-8 mb-2 text-accent" />
+                <span className="text-3xl font-bold font-mono">{guessedCount}/{total}</span>
+                <span className="text-sm text-muted-foreground">Countries</span>
+              </div>
+            </CardContent>
+          </Card>
+           <Card className="w-full">
+            <CardContent className="p-2 sm:p-4">
+             <WorldMap 
+                key={currentContinent.id}
+                countries={targetCountries}
+                mode={currentContinent.id}
+              />
+            </CardContent>
+          </Card>
+        </div>
         <div className="lg:col-span-1 flex flex-col gap-6 order-2 lg:order-1">
           <Card>
             <CardHeader>
@@ -187,33 +216,6 @@ const GameController = () => {
                   </Button>
                 </div>
               </form>
-            </CardContent>
-          </Card>
-        </div>
-
-        <div className="lg:col-span-2 flex flex-col gap-6 order-1 lg:order-2">
-           <Card>
-            <CardContent className="grid grid-cols-2 lg:grid-cols-2 gap-4 text-center p-6">
-              <div className="flex flex-col items-center justify-center p-4 bg-secondary rounded-lg">
-                <Timer className="w-8 h-8 mb-2 text-primary" />
-                <span className="text-3xl font-bold font-mono">{formatTime(timeLeft)}</span>
-                <span className="text-sm text-muted-foreground">Time Left</span>
-              </div>
-              <div className="flex flex-col items-center justify-center p-4 bg-secondary rounded-lg">
-                <Check className="w-8 h-8 mb-2 text-accent" />
-                <span className="text-3xl font-bold font-mono">{score}/{total}</span>
-                <span className="text-sm text-muted-foreground">Countries</span>
-              </div>
-            </CardContent>
-          </Card>
-           <Card className="w-full">
-            <CardContent className="p-2 sm:p-4">
-             <WorldMap 
-                key={currentContinent.id}
-                guessedCountries={guessedCountries}
-                gameContinent={currentContinent.name}
-                mode={currentContinent.id}
-              />
             </CardContent>
           </Card>
         </div>

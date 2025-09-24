@@ -6,20 +6,17 @@ import {
   ZoomableGroup,
 } from "react-simple-maps";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { countries as allCountries } from "@/lib/countries";
-import { cn } from "@/lib/utils";
+import { countries as allCountries, type Country } from "@/lib/countries";
 
 interface WorldMapProps {
-  guessedCountries: string[];
-  gameContinent: string;
+  countries: Country[];
   mode?: string;
 }
 
 const geoUrl = "https://unpkg.com/world-atlas@2/countries-110m.json";
 
-function WorldMapComponent({
-  guessedCountries,
-  gameContinent,
+export function WorldMap({
+  countries,
   mode = "all-world"
 }: WorldMapProps) {
 
@@ -40,69 +37,83 @@ function WorldMapComponent({
 
   const mapConfig = getMapConfig();
 
-  const targetCountriesISO = allCountries
-    .filter(c => gameContinent === 'All World' || c.continent === gameContinent)
-    .map(c => c.iso2);
+  const getCountryColor = (geo: any) => {
+    const countryInGame = countries.find(c => c.iso2 === geo.properties.ISO_A2);
+
+    if (!countryInGame) {
+        return 'hsl(var(--muted-foreground) / 0.3)';
+    }
+    if (countryInGame.guessed) {
+        return 'hsl(120 60% 45%)';
+    }
+    return 'hsl(var(--card-foreground) / 0.3)';
+  };
 
   return (
     <div className="w-full h-full aspect-video bg-card flex items-center justify-center overflow-hidden border rounded-lg">
        <TooltipProvider>
-      <ComposableMap
-        projectionConfig={{
-          scale: mapConfig.scale,
-          rotation: [-10,0,0]
-        }}
-        className="w-full h-full"
-      >
-        <ZoomableGroup center={mapConfig.center}>
-          <Geographies geography={geoUrl}>
-            {({ geographies }) =>
-              geographies.map((geo) => {
-                const country = allCountries.find(c => c.iso2 === geo.properties.ISO_A2);
-                const isGuessed = !!country && guessedCountries.includes(country.iso2);
-                const isTarget = !!country && targetCountriesISO.includes(country.iso2);
-                
-                return (
-                  <Tooltip key={geo.rsmKey}>
-                    <TooltipTrigger asChild>
-                      <Geography
-                        geography={geo}
-                        className={cn('country outline-none', {
-                          'guessed': isGuessed,
-                          'unguessed': isTarget && !isGuessed,
-                          'locked': !isTarget
-                        })}
-                        style={{
-                           hover: {
-                              fill: "hsl(var(--accent))",
-                              stroke: "hsl(var(--ring))",
-                              strokeWidth: 1,
-                              outline: "none",
-                            },
-                            pressed: {
-                              fill: "hsl(var(--accent))",
-                              stroke: "hsl(var(--ring))",
-                              strokeWidth: 1,
-                              outline: "none",
-                            },
-                        }}
-                      />
-                    </TooltipTrigger>
-                    {country && (
-                      <TooltipContent>
-                        <p className="font-medium">{country.name}</p>
-                      </TooltipContent>
-                    )}
-                  </Tooltip>
-                );
-              })
-            }
-          </Geographies>
-        </ZoomableGroup>
-      </ComposableMap>
+        <ComposableMap
+          projectionConfig={{
+            scale: mapConfig.scale,
+            rotation: [-10,0,0]
+          }}
+          className="w-full h-full"
+        >
+          <ZoomableGroup center={mapConfig.center}>
+            <Geographies geography={geoUrl}>
+              {({ geographies }) =>
+                geographies.map((geo) => {
+                  const country = allCountries.find(c => c.iso2 === geo.properties.ISO_A2);
+                  const isGuessed = countries.find(c => c.iso2 === geo.properties.ISO_A2)?.guessed;
+                  const color = getCountryColor(geo);
+
+                  return (
+                    <Tooltip key={geo.rsmKey}>
+                      <TooltipTrigger asChild>
+                        <Geography
+                          geography={geo}
+                          style={{
+                              default: {
+                                fill: color,
+                                stroke: "hsl(var(--background))",
+                                strokeWidth: 0.5,
+                                outline: "none",
+                              },
+                              hover: {
+                                fill: isGuessed 
+                                  ? "hsl(120 60% 55%)"
+                                  : country
+                                  ? "hsl(var(--accent))"
+                                  : "hsl(var(--muted) / 0.5)",
+                                stroke: "hsl(var(--ring))",
+                                strokeWidth: 1,
+                                outline: "none",
+                              },
+                              pressed: {
+                                fill: "hsl(var(--accent))",
+                                stroke: "hsl(var(--ring))",
+                                strokeWidth: 1,
+                                outline: "none",
+                              },
+                          }}
+                        />
+                      </TooltipTrigger>
+                      {country && (
+                        <TooltipContent>
+                          <p className="font-medium">{country.name}</p>
+                          {isGuessed && (
+                            <p className="text-xs text-muted-foreground">✓ Guessed</p>
+                          )}
+                        </TooltipContent>
+                      )}
+                    </Tooltip>
+                  );
+                })
+              }
+            </Geographies>
+          </ZoomableGroup>
+        </ComposableMap>
        </TooltipProvider>
     </div>
   );
 };
-
-export const WorldMap = WorldMapComponent;

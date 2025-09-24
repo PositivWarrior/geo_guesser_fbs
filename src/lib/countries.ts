@@ -7,6 +7,7 @@ export type Country = {
   iso2: string;
   aliases: string[];
   continent: 'Europe' | 'Asia' | 'Africa' | 'North America' | 'South America' | 'Oceania' | 'Antarctica';
+  guessed?: boolean;
 };
 
 export const countries: Country[] = [
