@@ -34,7 +34,7 @@ export function WorldMap({
     const country = getCountryFromGeo(geo);
     
     if (country?.guessed) {
-      return "hsl(140 80% 60%)";
+      return "hsl(142 71% 47%)"; // Bright green for guessed countries
     }
     
     const isCountryInGame = countries.some(c => c.iso2 === geo.properties.ISO_A2);
@@ -66,6 +66,11 @@ export function WorldMap({
       setTooltipContent(country.name);
       setHoveredCountry(country.name);
       onCountryHover?.(country.name);
+    } else {
+       // Show country name from map data even if not in game
+       const countryName = geo.properties.NAME;
+       setTooltipContent(countryName);
+       setHoveredCountry(countryName);
     }
   };
 
@@ -106,11 +111,11 @@ export function WorldMap({
                               stroke: "hsl(var(--background))",
                               strokeWidth: 0.25,
                               outline: "none",
-                              transition: "fill 0.3s",
+                              transition: "fill 0.3s ease-in-out",
                             },
                             hover: {
                               fill: country?.guessed 
-                                ? "hsl(140 80% 65%)"
+                                ? "hsl(142 71% 57%)" // Slightly brighter green on hover
                                 : country
                                 ? "hsl(var(--accent))"
                                 : "hsl(var(--muted-foreground) / 0.2)",
@@ -127,7 +132,7 @@ export function WorldMap({
                           }}
                         />
                       </TooltipTrigger>
-                      {tooltipContent && hoveredCountry === country?.name && (
+                      {tooltipContent && hoveredCountry === (country?.name || geo.properties.NAME) && (
                         <TooltipContent>
                           <p className="font-medium">{tooltipContent}</p>
                           {country?.guessed && (
@@ -146,3 +151,5 @@ export function WorldMap({
     </div>
   );
 }
+
+    

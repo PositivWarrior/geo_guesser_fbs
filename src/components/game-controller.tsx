@@ -52,8 +52,13 @@ const GameController = () => {
     );
   
     if (targetIndex !== -1) {
-      const newTargetCountries = [...targetCountries];
-      newTargetCountries[targetIndex] = { ...newTargetCountries[targetIndex], guessed: true };
+      // Create a new array with the updated country
+      const newTargetCountries = targetCountries.map((country, index) => {
+        if (index === targetIndex) {
+          return { ...country, guessed: true };
+        }
+        return country;
+      });
       setTargetCountries(newTargetCountries);
       toast({ title: "Correct!", description: `You've guessed ${newTargetCountries[targetIndex].name}.`, variant: 'default' });
     } else {
@@ -90,9 +95,11 @@ const GameController = () => {
   const resetGame = () => {
     setGameState("menu");
     setCurrentContinent(null);
+    setTargetCountries([]);
   };
 
   const guessedCount = targetCountries.filter(c => c.guessed).length;
+  const total = targetCountries.length;
 
   useEffect(() => {
     if (gameState === "playing" && timeLeft > 0) {
@@ -106,10 +113,10 @@ const GameController = () => {
   }, [gameState, timeLeft]);
 
   useEffect(() => {
-    if (gameState === "playing" && targetCountries.length > 0 && guessedCount === targetCountries.length) {
+    if (gameState === "playing" && total > 0 && guessedCount === total) {
       setGameState("finished");
     }
-  }, [guessedCount, targetCountries.length, gameState]);
+  }, [guessedCount, total, gameState]);
 
   if (gameState === "menu") {
     return <ContinentSelector continents={continents} unlockedContinents={unlockedContinents} onSelect={startGame} />;
@@ -120,8 +127,6 @@ const GameController = () => {
     const secs = seconds % 60;
     return `${minutes}:${secs < 10 ? '0' : ''}${secs}`;
   };
-
-  const total = targetCountries.length;
 
   return (
     <div className="w-full max-w-7xl mx-auto flex flex-col gap-6 p-4">
@@ -144,12 +149,12 @@ const GameController = () => {
             GeoGuesser
           </h1>
         </div>
-        <Button onClick={resetGame} variant="outline" size="sm" className="bg-card/50">
+        <Button onClick={resetGame} variant="outline" size="sm" className="bg-card/80">
             <ArrowLeft className="mr-2 h-4 w-4" />
             Back to Menu
         </Button>
       </header>
-       <Card>
+       <Card className="bg-card/80">
         <CardContent className="grid grid-cols-2 gap-4 text-center p-4">
           <div className="flex flex-col items-center justify-center p-4 bg-background/50 rounded-lg">
             <Timer className="w-8 h-8 mb-2 text-primary" />
@@ -174,7 +179,7 @@ const GameController = () => {
             />
           </CardContent>
         </Card>
-        <Card>
+        <Card className="bg-card/80">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-xl font-headline">
               <ShieldQuestion />
@@ -210,3 +215,5 @@ const GameController = () => {
 };
 
 export default GameController;
+
+    
