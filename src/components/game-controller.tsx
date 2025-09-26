@@ -8,7 +8,7 @@ import { useToast } from '@/hooks/use-toast';
 import { continents, type Continent } from '@/lib/continents';
 import { countries, type Country } from '@/lib/countries';
 import { normalizeString } from '@/lib/game-logic';
-import { Timer, Check, Globe, Pause, Play, ShieldQuestion, ArrowLeft } from 'lucide-react';
+import { Timer, Check, Pause, Play, ShieldQuestion, ArrowLeft } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { checkPauseAbility } from '@/app/actions';
 import { GameEndDialog } from './game-end-dialog';
@@ -22,7 +22,7 @@ const GameController = () => {
   const [currentContinent, setCurrentContinent] = useState<Continent | null>(null);
   const [targetCountries, setTargetCountries] = useState<Country[]>([]);
   const [timeLeft, setTimeLeft] = useState(0);
-  const [isChallengeMode] = useState(false); // Challenge mode logic removed for now
+  const [isChallengeMode] = useState(false);
   const [inputValue, setInputValue] = useState("");
   const { toast } = useToast();
 
@@ -149,7 +149,7 @@ const GameController = () => {
             Back to Menu
         </Button>
       </header>
-       <Card className="bg-card/50 backdrop-blur-sm border-primary/10">
+       <Card>
         <CardContent className="grid grid-cols-2 gap-4 text-center p-4">
           <div className="flex flex-col items-center justify-center p-4 bg-background/50 rounded-lg">
             <Timer className="w-8 h-8 mb-2 text-primary" />
@@ -174,7 +174,7 @@ const GameController = () => {
             />
           </CardContent>
         </Card>
-        <Card className="bg-card/50 backdrop-blur-sm border-primary/10">
+        <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-xl font-headline">
               <ShieldQuestion />

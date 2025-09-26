@@ -34,17 +34,14 @@ export function WorldMap({
     const country = getCountryFromGeo(geo);
     
     if (country?.guessed) {
-      return "hsl(140 80% 60%)"; // A nice, bright green
+      return "hsl(140 80% 60%)";
     }
     
-    // Check if the country is part of the current game selection
     const isCountryInGame = countries.some(c => c.iso2 === geo.properties.ISO_A2);
     if (!isCountryInGame) {
-        // Muted color for countries not in the current continent/game
         return "hsl(var(--muted-foreground) / 0.1)";
     }
     
-    // Default color for unguessed countries in the game
     return "hsl(var(--card-foreground) / 0.2)";
   };
 
