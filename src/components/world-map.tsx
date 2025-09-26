@@ -13,7 +13,7 @@ import { type Country } from "@/lib/countries";
 interface WorldMapProps {
   countries: Country[];
   onCountryHover?: (countryName: string | null) => void;
-  mode?: string;
+  mode?: string | null;
 }
 
 const geoUrl = "https://unpkg.com/world-atlas@2/countries-110m.json";
@@ -26,24 +26,26 @@ export function WorldMap({
   const [tooltipContent, setTooltipContent] = useState<string | null>(null);
   const [hoveredCountry, setHoveredCountry] = useState<string | null>(null);
 
-
   const getCountryFromGeo = (geo: any) => {
     return countries.find(c => c.iso2 === geo.properties.ISO_A2);
   };
-
+  
   const getCountryColor = (geo: any) => {
     const country = getCountryFromGeo(geo);
     
     if (country?.guessed) {
-      return "hsl(120 60% 45%)";
+      return "hsl(140 80% 60%)"; // A nice, bright green
     }
     
+    // Check if the country is part of the current game selection
     const isCountryInGame = countries.some(c => c.iso2 === geo.properties.ISO_A2);
     if (!isCountryInGame) {
-      return "hsl(var(--muted-foreground) / 0.3)";
+        // Muted color for countries not in the current continent/game
+        return "hsl(var(--muted-foreground) / 0.1)";
     }
     
-    return "hsl(var(--card-foreground) / 0.3)";
+    // Default color for unguessed countries in the game
+    return "hsl(var(--card-foreground) / 0.2)";
   };
 
   const getMapConfig = () => {
@@ -79,8 +81,8 @@ export function WorldMap({
   const mapConfig = getMapConfig();
 
   return (
-    <div className="w-full h-full bg-card rounded-md border border-border overflow-hidden">
-      <TooltipProvider>
+    <div className="w-full h-full bg-background/30 rounded-lg border border-border/20 overflow-hidden shadow-lg shadow-black/20">
+      <TooltipProvider delayDuration={100}>
         <ComposableMap
           projectionConfig={{
             scale: mapConfig.scale,
@@ -88,7 +90,7 @@ export function WorldMap({
           }}
           className="w-full h-full"
         >
-          <ZoomableGroup center={mapConfig.center}>
+          <ZoomableGroup center={mapConfig.center} minZoom={0.75}>
             <Geographies geography={geoUrl}>
               {({ geographies }) =>
                 geographies.map((geo) => {
@@ -105,15 +107,16 @@ export function WorldMap({
                             default: {
                               fill: getCountryColor(geo),
                               stroke: "hsl(var(--background))",
-                              strokeWidth: 0.5,
+                              strokeWidth: 0.25,
                               outline: "none",
+                              transition: "fill 0.3s",
                             },
                             hover: {
                               fill: country?.guessed 
-                                ? "hsl(120 60% 55%)"
+                                ? "hsl(140 80% 65%)"
                                 : country
                                 ? "hsl(var(--accent))"
-                                : "hsl(var(--muted) / 0.5)",
+                                : "hsl(var(--muted-foreground) / 0.2)",
                               stroke: "hsl(var(--ring))",
                               strokeWidth: 1,
                               outline: "none",
@@ -131,7 +134,7 @@ export function WorldMap({
                         <TooltipContent>
                           <p className="font-medium">{tooltipContent}</p>
                           {country?.guessed && (
-                            <p className="text-xs text-muted-foreground">✓ Guessed</p>
+                            <p className="text-xs text-green-400">✓ Guessed</p>
                           )}
                         </TooltipContent>
                       )}
