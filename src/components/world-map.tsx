@@ -27,7 +27,8 @@ export function WorldMap({
   const [hoveredCountry, setHoveredCountry] = useState<string | null>(null);
 
   const getCountryFromGeo = (geo: any) => {
-    // Robust matching for different ISO code properties in the map data
+    // Use multiple properties from the geography data to find a match in our countries list.
+    // This is robust because different map datasets can use different property names.
     const geoCode = geo.properties.ISO_A2 || geo.properties.ADM0_A3 || geo.properties.WB_A2;
     return countries.find(c => c.iso2 === geoCode);
   };
@@ -38,10 +39,11 @@ export function WorldMap({
     if (country?.guessed) {
       return "hsl(142 71% 47%)"; // Vibrant green for guessed countries
     }
-    
-    // Check if the country from the map is part of the current game
+
+    // Check if the country from the map is part of the current game at all.
+    // This is a fallback in case getCountryFromGeo fails, or for countries not in the current continent challenge.
     const isCountryInGame = countries.some(c => c.iso2 === (geo.properties.ISO_A2 || geo.properties.ADM0_A3 || geo.properties.WB_A2));
-    if (!isCountryInGame) {
+    if (!isCountryInGame && mode !== 'all-world') {
         return "hsl(var(--muted-foreground) / 0.1)"; // Very muted for countries not in play
     }
     
