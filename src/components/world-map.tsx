@@ -27,21 +27,25 @@ export function WorldMap({
   const [hoveredCountry, setHoveredCountry] = useState<string | null>(null);
 
   const getCountryFromGeo = (geo: any) => {
-    return countries.find(c => c.iso2 === geo.properties.ISO_A2);
+    // Robust matching for different ISO code properties in the map data
+    const geoCode = geo.properties.ISO_A2 || geo.properties.ADM0_A3 || geo.properties.WB_A2;
+    return countries.find(c => c.iso2 === geoCode);
   };
   
   const getCountryColor = (geo: any) => {
     const country = getCountryFromGeo(geo);
     
     if (country?.guessed) {
-      return "hsl(142 71% 47%)"; // Bright green for guessed countries
+      return "hsl(142 71% 47%)"; // Vibrant green for guessed countries
     }
     
-    const isCountryInGame = countries.some(c => c.iso2 === geo.properties.ISO_A2);
+    // Check if the country from the map is part of the current game
+    const isCountryInGame = countries.some(c => c.iso2 === (geo.properties.ISO_A2 || geo.properties.ADM0_A3 || geo.properties.WB_A2));
     if (!isCountryInGame) {
-        return "hsl(var(--muted-foreground) / 0.1)";
+        return "hsl(var(--muted-foreground) / 0.1)"; // Very muted for countries not in play
     }
     
+    // Default color for unguessed countries in the game
     return "hsl(var(--card-foreground) / 0.2)";
   };
 
@@ -62,16 +66,10 @@ export function WorldMap({
 
   const handleMouseEnter = (geo: any) => {
     const country = getCountryFromGeo(geo);
-    if (country) {
-      setTooltipContent(country.name);
-      setHoveredCountry(country.name);
-      onCountryHover?.(country.name);
-    } else {
-       // Show country name from map data even if not in game
-       const countryName = geo.properties.NAME;
-       setTooltipContent(countryName);
-       setHoveredCountry(countryName);
-    }
+    const countryName = country?.name || geo.properties.NAME;
+    setTooltipContent(countryName);
+    setHoveredCountry(countryName);
+    onCountryHover?.(countryName);
   };
 
   const handleMouseLeave = () => {
@@ -97,6 +95,7 @@ export function WorldMap({
               {({ geographies }) =>
                 geographies.map((geo) => {
                   const country = getCountryFromGeo(geo);
+                  const countryName = country?.name || geo.properties.NAME;
                   
                   return (
                     <Tooltip key={geo.rsmKey}>
@@ -132,7 +131,7 @@ export function WorldMap({
                           }}
                         />
                       </TooltipTrigger>
-                      {tooltipContent && hoveredCountry === (country?.name || geo.properties.NAME) && (
+                      {tooltipContent && hoveredCountry === countryName && (
                         <TooltipContent>
                           <p className="font-medium">{tooltipContent}</p>
                           {country?.guessed && (
@@ -151,5 +150,3 @@ export function WorldMap({
     </div>
   );
 }
-
-    
