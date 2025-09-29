@@ -9,7 +9,6 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Button } from "./ui/button";
-import type { Country } from "@/lib/countries";
 import { ScrollArea } from "./ui/scroll-area";
 import { Badge } from "./ui/badge";
 
@@ -19,7 +18,7 @@ interface GameEndDialogProps {
   total: number;
   timeTaken: number;
   continentName: string;
-  missedCountries: Country[];
+  missedCountries: string[];
   onRestart: () => void;
   onMenu: () => void;
 }
@@ -59,7 +58,7 @@ export function GameEndDialog({
             <ScrollArea className="h-40 w-full rounded-md border p-2">
                 <div className="flex flex-wrap gap-2">
                 {missedCountries.map((c) => (
-                    <Badge key={c.iso2} variant="secondary">{c.name}</Badge>
+                    <Badge key={c} variant="secondary">{c}</Badge>
                 ))}
                 </div>
             </ScrollArea>

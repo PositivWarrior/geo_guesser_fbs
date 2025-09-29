@@ -7,16 +7,17 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { continents, type Continent } from '@/lib/continents';
-import { countries, type Country } from '@/lib/countries';
 import { normalizeString } from '@/lib/game-logic';
-import { Timer, Check, Pause, Play, ShieldQuestion, ArrowLeft, LandPlot } from 'lucide-react';
+import { Timer, Check, Pause, Play, ShieldQuestion, ArrowLeft, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
-import { checkPauseAbility } from '@/app/actions';
+import { checkPauseAbility, getCountriesByRegion } from '@/app/actions';
 import { GameEndDialog } from './game-end-dialog';
 import { ContinentSelector } from './continent-selector';
 import { Compass } from './icons';
+import { Country } from '@/lib/types';
+import { Skeleton } from './ui/skeleton';
 
-type GameState = "menu" | "playing" | "paused" | "finished";
+type GameState = "menu" | "loading" | "playing" | "paused" | "finished";
 
 const GameController = () => {
   const [gameState, setGameState] = useState<GameState>("menu");
@@ -29,29 +30,25 @@ const GameController = () => {
 
   const unlockedContinents = ["Europe", "Asia & Oceania", "The Americas", "Africa", "Whole World"];
 
-  const startGame = (continent: Continent) => {
+  const startGame = async (continent: Continent) => {
+    setGameState("loading");
     setCurrentContinent(continent);
-    setTimeLeft(continent.time);
     setInputValue("");
     
-    let gameCountries;
-    switch (continent.id) {
-        case 'all-world':
-            gameCountries = countries;
-            break;
-        case 'americas':
-            gameCountries = countries.filter(c => c.continent === 'The Americas');
-            break;
-        case 'asia-oceania':
-            gameCountries = countries.filter(c => c.continent === 'Asia & Oceania');
-            break;
-        default:
-            gameCountries = countries.filter(c => c.continent === continent.name);
-            break;
+    try {
+        const gameCountries = await getCountriesByRegion(continent.id);
+        setTargetCountries(gameCountries);
+        setTimeLeft(continent.time);
+        setGameState("playing");
+    } catch (error) {
+        console.error("Failed to start game:", error);
+        toast({
+            title: "Error",
+            description: "Could not load countries. Please try again later.",
+            variant: "destructive",
+        });
+        setGameState("menu");
     }
-
-    setTargetCountries(gameCountries.map(c => ({ ...c, guessed: false })));
-    setGameState("playing");
   };
 
   const handleGuess = (e: React.FormEvent) => {
@@ -60,25 +57,33 @@ const GameController = () => {
 
     const normalizedGuess = normalizeString(inputValue);
 
+    const isAlreadyGuessed = targetCountries.some(
+      (c) => c.guessed && normalizeString(c.name.common) === normalizedGuess
+    );
+
+    if (isAlreadyGuessed) {
+        toast({ title: "Already Guessed!", description: "You've already found that country.", variant: "default" });
+        setInputValue("");
+        return;
+    }
+
     const targetIndex = targetCountries.findIndex(
-      (c) => !c.guessed && (normalizeString(c.name) === normalizedGuess || c.aliases?.some(alias => normalizeString(alias) === normalizedGuess))
+      (c) => !c.guessed && 
+        (normalizeString(c.name.common) === normalizedGuess || 
+         Object.values(c.translations).some(t => normalizeString(t.common) === normalizedGuess) ||
+         (c.demonyms && Object.values(c.demonyms).some(d => normalizeString(d.m) === normalizedGuess || normalizeString(d.f) === normalizedGuess))
+        )
     );
 
     if (targetIndex !== -1) {
+      const countryName = targetCountries[targetIndex].name.common;
       const newTargetCountries = targetCountries.map((country, index) => 
         index === targetIndex ? { ...country, guessed: true } : country
       );
       setTargetCountries(newTargetCountries);
-      toast({ title: "Correct!", description: `You've guessed ${newTargetCountries[targetIndex].name}.`, variant: 'default' });
+      toast({ title: "Correct!", description: `You've guessed ${countryName}.`, variant: 'default' });
     } else {
-        const alreadyGuessed = targetCountries.some(
-            (c) => c.guessed && (normalizeString(c.name) === normalizedGuess || c.aliases?.some(alias => normalizeString(alias) === normalizedGuess))
-        );
-        if (alreadyGuessed) {
-            toast({ title: "Already Guessed!", description: "You've already found that country.", variant: "default" });
-        } else {
-            toast({ title: "Incorrect", description: "That's not a recognized country in this continent. Try again!", variant: "destructive" });
-        }
+      toast({ title: "Incorrect", description: "That's not a recognized country in this continent. Try again!", variant: "destructive" });
     }
     setInputValue("");
   };
@@ -116,10 +121,10 @@ const GameController = () => {
         setTimeLeft(prev => prev - 1);
       }, 1000);
       return () => clearInterval(timer);
-    } else if (gameState === "playing" && timeLeft === 0) {
+    } else if (gameState === "playing" && timeLeft === 0 && total > 0) {
       setGameState("finished");
     }
-  }, [gameState, timeLeft]);
+  }, [gameState, timeLeft, total]);
 
   useEffect(() => {
     if (gameState === "playing" && total > 0 && guessedCount === total) {
@@ -129,6 +134,23 @@ const GameController = () => {
 
   if (gameState === "menu") {
     return <ContinentSelector continents={continents} unlockedContinents={unlockedContinents} onSelect={startGame} />;
+  }
+  
+  if (gameState === "loading") {
+    return (
+        <div className="flex flex-col items-center justify-center min-h-screen w-full">
+            <Card className="w-full max-w-2xl text-center">
+                <CardHeader>
+                    <CardTitle className="text-3xl">Loading your adventure...</CardTitle>
+                </CardHeader>
+                <CardContent className="flex flex-col items-center gap-4">
+                    <Loader2 className="w-16 h-16 animate-spin text-primary" />
+                    <p className="text-muted-foreground">Fetching countries and preparing the map.</p>
+                    <Skeleton className="h-96 w-full" />
+                </CardContent>
+            </Card>
+        </div>
+    );
   }
 
   const formatTime = (seconds: number) => {
@@ -146,7 +168,7 @@ const GameController = () => {
             total={total}
             timeTaken={currentContinent.time - timeLeft}
             continentName={currentContinent.name}
-            missedCountries={targetCountries.filter(c => !c.guessed)}
+            missedCountries={targetCountries.filter(c => !c.guessed).map(c => c.name.common)}
             onRestart={() => startGame(currentContinent)}
             onMenu={resetGame}
           />
@@ -184,7 +206,7 @@ const GameController = () => {
            <WorldMap
               key={currentContinent?.id}
               countries={targetCountries}
-              mode={currentContinent?.id}
+              region={currentContinent?.id}
             />
           </CardContent>
         </Card>

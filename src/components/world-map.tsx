@@ -9,12 +9,12 @@ import {
   ZoomableGroup,
 } from "react-simple-maps";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { type Country } from "@/lib/countries";
+import { type Country } from "@/lib/types";
 
 interface WorldMapProps {
   countries: Country[];
   onCountryHover?: (countryName: string | null) => void;
-  mode?: string | null;
+  region?: string | null;
 }
 
 const geoUrl = "https://unpkg.com/world-atlas@2/countries-110m.json";
@@ -22,29 +22,31 @@ const geoUrl = "https://unpkg.com/world-atlas@2/countries-110m.json";
 export function WorldMap({
   countries,
   onCountryHover,
-  mode = "all-world"
+  region = "all-world"
 }: WorldMapProps) {
   const [tooltipContent, setTooltipContent] = useState<string | null>(null);
   const [hoveredCountry, setHoveredCountry] = useState<string | null>(null);
 
   const getCountryFromGeo = (geo: any) => {
+    //
+    // Use a few different properties to identify the country, as the map data is inconsistent.
     const geoCode = geo.properties.ISO_A2 || geo.properties.ADM0_A3 || geo.properties.WB_A2;
-    return countries.find(c => c.iso2 === geoCode);
+    return countries.find(c => c.cca2 === geoCode);
   };
   
   const getCountryColor = (geo: any) => {
     const country = getCountryFromGeo(geo);
     
     if (country?.guessed) {
-      return "hsl(142 71% 47%)";
+      return "hsl(142 71% 47%)"; // A vibrant green for guessed countries
     }
 
-    const isCountryInGame = countries.some(c => c.iso2 === (geo.properties.ISO_A2 || geo.properties.ADM0_A3 || geo.properties.WB_A2));
-    if (!isCountryInGame && mode !== 'all-world') {
-        return "hsl(var(--muted-foreground) / 0.1)"; 
+    const isCountryInGame = countries.some(c => c.cca2 === (geo.properties.ISO_A2 || geo.properties.ADM0_A3 || geo.properties.WB_A2));
+    if (!isCountryInGame && region !== 'all-world') {
+        return "hsl(var(--muted-foreground) / 0.1)"; // Very faint for out-of-play countries
     }
     
-    return "hsl(var(--card-foreground) / 0.2)";
+    return "hsl(var(--card-foreground) / 0.2)"; // Default for unguessed countries
   };
 
   const getMapConfig = () => {
@@ -56,13 +58,13 @@ export function WorldMap({
       'all-world': { center: [10, 20] as [number, number], scale: 150 }
     };
     
-    const key = mode as keyof typeof configs;
+    const key = region as keyof typeof configs;
     return configs[key] || configs['all-world'];
   };
 
   const handleMouseEnter = (geo: any) => {
     const country = getCountryFromGeo(geo);
-    const countryName = country?.name || geo.properties.NAME;
+    const countryName = country?.name.common || geo.properties.NAME;
     setTooltipContent(countryName);
     setHoveredCountry(countryName);
     onCountryHover?.(countryName);
@@ -91,7 +93,7 @@ export function WorldMap({
               {({ geographies }) =>
                 geographies.map((geo) => {
                   const country = getCountryFromGeo(geo);
-                  const countryName = country?.name || geo.properties.NAME;
+                  const countryName = country?.name.common || geo.properties.NAME;
                   
                   return (
                     <Tooltip key={geo.rsmKey}>

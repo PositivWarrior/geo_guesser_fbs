@@ -1,5 +1,4 @@
-
-import { Globe, Leaf, Mountain, Sun, Waves, Zap, LandPlot } from "lucide-react";
+import { Globe, Leaf, Mountain, Sun, LandPlot } from "lucide-react";
 
 export interface Continent {
   id: string;
