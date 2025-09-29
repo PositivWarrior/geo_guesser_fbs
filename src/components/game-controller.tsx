@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -8,7 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 import { continents, type Continent } from '@/lib/continents';
 import { countries, type Country } from '@/lib/countries';
 import { normalizeString } from '@/lib/game-logic';
-import { Timer, Check, Pause, Play, ShieldQuestion, ArrowLeft } from 'lucide-react';
+import { Timer, Check, Pause, Play, ShieldQuestion, ArrowLeft, LandPlot } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { checkPauseAbility } from '@/app/actions';
 import { GameEndDialog } from './game-end-dialog';
@@ -26,39 +27,47 @@ const GameController = () => {
   const [inputValue, setInputValue] = useState("");
   const { toast } = useToast();
 
-  const unlockedContinents = ["Europe", "Asia", "Africa", "North America", "South America", "Oceania"];
+  const unlockedContinents = ["Europe", "Asia & Oceania", "The Americas", "Africa", "Whole World"];
 
   const startGame = (continent: Continent) => {
     setCurrentContinent(continent);
     setTimeLeft(continent.time);
     setInputValue("");
-    const gameCountries = (continent.id === "all-world" 
-        ? countries 
-        : countries.filter(c => c.continent === continent.name)
-    ).map(c => ({ ...c, guessed: false }));
+    
+    let gameCountries;
+    switch (continent.id) {
+        case 'all-world':
+            gameCountries = countries;
+            break;
+        case 'americas':
+            gameCountries = countries.filter(c => c.continent === 'The Americas');
+            break;
+        case 'asia-oceania':
+            gameCountries = countries.filter(c => c.continent === 'Asia & Oceania');
+            break;
+        default:
+            gameCountries = countries.filter(c => c.continent === continent.name);
+            break;
+    }
 
-    setTargetCountries(gameCountries);
+    setTargetCountries(gameCountries.map(c => ({ ...c, guessed: false })));
     setGameState("playing");
   };
 
   const handleGuess = (e: React.FormEvent) => {
     e.preventDefault();
     if (!inputValue.trim()) return;
-  
+
     const normalizedGuess = normalizeString(inputValue);
-  
+
     const targetIndex = targetCountries.findIndex(
       (c) => !c.guessed && (normalizeString(c.name) === normalizedGuess || c.aliases?.some(alias => normalizeString(alias) === normalizedGuess))
     );
-  
+
     if (targetIndex !== -1) {
-      // Create a new array with the updated country
-      const newTargetCountries = targetCountries.map((country, index) => {
-        if (index === targetIndex) {
-          return { ...country, guessed: true };
-        }
-        return country;
-      });
+      const newTargetCountries = targetCountries.map((country, index) => 
+        index === targetIndex ? { ...country, guessed: true } : country
+      );
       setTargetCountries(newTargetCountries);
       toast({ title: "Correct!", description: `You've guessed ${newTargetCountries[targetIndex].name}.`, variant: 'default' });
     } else {
@@ -154,7 +163,7 @@ const GameController = () => {
             Back to Menu
         </Button>
       </header>
-       <Card className="bg-card/80">
+       <Card>
         <CardContent className="grid grid-cols-2 gap-4 text-center p-4">
           <div className="flex flex-col items-center justify-center p-4 bg-background/50 rounded-lg">
             <Timer className="w-8 h-8 mb-2 text-primary" />
@@ -179,7 +188,7 @@ const GameController = () => {
             />
           </CardContent>
         </Card>
-        <Card className="bg-card/80">
+        <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-xl font-headline">
               <ShieldQuestion />

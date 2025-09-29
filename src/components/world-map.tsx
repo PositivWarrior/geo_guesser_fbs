@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -27,8 +28,6 @@ export function WorldMap({
   const [hoveredCountry, setHoveredCountry] = useState<string | null>(null);
 
   const getCountryFromGeo = (geo: any) => {
-    // Use multiple properties from the geography data to find a match in our countries list.
-    // This is robust because different map datasets can use different property names.
     const geoCode = geo.properties.ISO_A2 || geo.properties.ADM0_A3 || geo.properties.WB_A2;
     return countries.find(c => c.iso2 === geoCode);
   };
@@ -37,28 +36,23 @@ export function WorldMap({
     const country = getCountryFromGeo(geo);
     
     if (country?.guessed) {
-      return "hsl(142 71% 47%)"; // Vibrant green for guessed countries
+      return "hsl(142 71% 47%)";
     }
 
-    // Check if the country from the map is part of the current game at all.
-    // This is a fallback in case getCountryFromGeo fails, or for countries not in the current continent challenge.
     const isCountryInGame = countries.some(c => c.iso2 === (geo.properties.ISO_A2 || geo.properties.ADM0_A3 || geo.properties.WB_A2));
     if (!isCountryInGame && mode !== 'all-world') {
-        return "hsl(var(--muted-foreground) / 0.1)"; // Very muted for countries not in play
+        return "hsl(var(--muted-foreground) / 0.1)"; 
     }
     
-    // Default color for unguessed countries in the game
     return "hsl(var(--card-foreground) / 0.2)";
   };
 
   const getMapConfig = () => {
     const configs = {
       europe: { center: [15, 54] as [number, number], scale: 600 },
-      asia: { center: [90, 30] as [number, number], scale: 400 },
+      'asia-oceania': { center: [100, 30] as [number, number], scale: 400 },
       africa: { center: [20, 2] as [number, number], scale: 400 },
-      'north-america': { center: [-90, 40] as [number, number], scale: 400 },
-      'south-america': { center: [-60, -20] as [number, number], scale: 350 },
-      oceania: { center: [135, -25] as [number, number], scale: 450 },
+      'americas': { center: [-80, 20] as [number, number], scale: 300 },
       'all-world': { center: [10, 20] as [number, number], scale: 150 }
     };
     
@@ -116,7 +110,7 @@ export function WorldMap({
                             },
                             hover: {
                               fill: country?.guessed 
-                                ? "hsl(142 71% 57%)" // Slightly brighter green on hover
+                                ? "hsl(142 71% 57%)"
                                 : country
                                 ? "hsl(var(--accent))"
                                 : "hsl(var(--muted-foreground) / 0.2)",

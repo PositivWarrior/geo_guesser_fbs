@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Button } from "@/components/ui/button";
@@ -17,7 +18,8 @@ export function ContinentSelector({ continents, unlockedContinents, onSelect }: 
   const { toast } = useToast();
 
   const handleSelect = (continent: Continent) => {
-    if (unlockedContinents.includes(continent.name) || continent.name === 'All World') {
+    const isUnlocked = unlockedContinents.includes(continent.name) || continent.name === 'Whole World' || continent.name === 'Europe';
+    if (isUnlocked) {
       onSelect(continent);
     } else {
       toast({
@@ -40,7 +42,7 @@ export function ContinentSelector({ continents, unlockedContinents, onSelect }: 
       <CardContent>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {continents.map((continent) => {
-            const isUnlocked = unlockedContinents.includes(continent.name) || continent.name === 'All World';
+            const isUnlocked = unlockedContinents.includes(continent.name) || continent.name === 'Whole World' || continent.name === 'Europe';
             const Icon = continent.icon;
             return (
               <Button
@@ -49,7 +51,6 @@ export function ContinentSelector({ continents, unlockedContinents, onSelect }: 
                 className="h-28 flex flex-col justify-center items-center gap-2 text-lg font-semibold transform transition-transform duration-200 hover:scale-105"
                 onClick={() => handleSelect(continent)}
                 aria-label={isUnlocked ? `Play ${continent.name}` : `${continent.name} (Locked)`}
-                disabled={!isUnlocked}
               >
                 <Icon className="w-10 h-10 mb-1"/>
                 <span>{continent.name}</span>
