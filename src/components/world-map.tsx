@@ -28,7 +28,6 @@ export function WorldMap({
   const [hoveredCountry, setHoveredCountry] = useState<string | null>(null);
 
   const getCountryFromGeo = (geo: any) => {
-    //
     // Use a few different properties to identify the country, as the map data is inconsistent.
     const geoCode = geo.properties.ISO_A2 || geo.properties.ADM0_A3 || geo.properties.WB_A2;
     return countries.find(c => c.cca2 === geoCode);
