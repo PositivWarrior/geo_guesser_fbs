@@ -40,7 +40,7 @@ export function WorldMap({
       return "hsl(142 71% 47%)"; // A vibrant green for guessed countries
     }
 
-    const isCountryInGame = countries.some(c => c.cca2 === (geo.properties.ISO_A2 || geo.properties.ADM0_A3 || geo.properties.WB_A2));
+    const isCountryInGame = !!country;
     if (!isCountryInGame && region !== 'all-world') {
         return "hsl(var(--muted-foreground) / 0.1)"; // Very faint for out-of-play countries
     }
