@@ -120,7 +120,11 @@ export function WorldMap({
                               outline: "none",
                             },
                             pressed: {
-                              fill: "hsl(var(--accent))",
+                              fill: country?.guessed
+                                ? "hsl(142 71% 57%)"
+                                : country
+                                ? "hsl(var(--accent))"
+                                : "hsl(var(--muted-foreground) / 0.2)",
                               stroke: "hsl(var(--ring))",
                               strokeWidth: 1,
                               outline: "none",
