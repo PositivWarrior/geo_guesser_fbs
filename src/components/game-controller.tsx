@@ -26,6 +26,7 @@ const GameController = () => {
   const [timeLeft, setTimeLeft] = useState(0);
   const [isChallengeMode] = useState(false);
   const [inputValue, setInputValue] = useState("");
+  const [gameVersion, setGameVersion] = useState(0);
   const { toast } = useToast();
 
   const unlockedContinents = ["Europe", "Asia & Oceania", "The Americas", "Africa", "Whole World"];
@@ -34,6 +35,7 @@ const GameController = () => {
     setGameState("loading");
     setCurrentContinent(continent);
     setInputValue("");
+    setGameVersion(0);
     
     try {
         const gameCountries = await getCountriesByRegion(continent.id);
@@ -81,6 +83,7 @@ const GameController = () => {
         index === targetIndex ? { ...country, guessed: true } : country
       );
       setTargetCountries(newTargetCountries);
+      setGameVersion(v => v + 1); // Force re-render of map
       toast({ title: "Correct!", description: `You've guessed ${countryName}.`, variant: 'default' });
     } else {
       toast({ title: "Incorrect", description: "That's not a recognized country in this continent. Try again!", variant: "destructive" });
@@ -204,7 +207,7 @@ const GameController = () => {
         <Card className="w-full bg-transparent border-0 shadow-none">
           <CardContent className="p-0">
            <WorldMap
-              key={currentContinent?.id}
+              key={`${currentContinent?.id}-${gameVersion}`}
               countries={targetCountries}
               region={currentContinent?.id}
             />
@@ -246,3 +249,5 @@ const GameController = () => {
 };
 
 export default GameController;
+
+    
