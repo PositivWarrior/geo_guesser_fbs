@@ -1,12 +1,7 @@
 'use client';
 
 import { useState, useMemo, useCallback } from 'react';
-import {
-	ComposableMap,
-	Geographies,
-	Geography,
-	ZoomableGroup,
-} from 'react-simple-maps';
+import { ComposableMap, Geographies, Geography } from 'react-simple-maps';
 import {
 	Tooltip,
 	TooltipContent,
@@ -145,14 +140,14 @@ export function WorldMap({
 
 	const getMapConfig = () => {
 		const configs = {
-			europe: { center: [15, 54] as [number, number], scale: 600 },
+			europe: { center: [15, 54] as [number, number], scale: 700 },
 			'asia-oceania': {
 				center: [100, 30] as [number, number],
-				scale: 400,
+				scale: 500,
 			},
-			africa: { center: [20, 2] as [number, number], scale: 400 },
-			americas: { center: [-80, 20] as [number, number], scale: 300 },
-			'all-world': { center: [10, 20] as [number, number], scale: 150 },
+			africa: { center: [20, 2] as [number, number], scale: 500 },
+			americas: { center: [-80, 20] as [number, number], scale: 400 },
+			'all-world': { center: [10, 20] as [number, number], scale: 180 },
 		};
 
 		const key = region as keyof typeof configs;
@@ -188,112 +183,106 @@ export function WorldMap({
 				<ComposableMap
 					projectionConfig={{
 						scale: mapConfig.scale,
+						center: mapConfig.center,
 					}}
 					className="w-full h-full"
 				>
-					<ZoomableGroup center={mapConfig.center} minZoom={0.75}>
-						<Geographies key={guessedHash} geography={geoUrl}>
-							{({ geographies }) => {
-								return geographies.map((geo, index) => {
-									const country = getCountryFromGeo(geo);
-									const countryName =
-										country?.name.common ||
-										geo.properties?.NAME ||
-										geo.properties?.name ||
-										geo.properties?.ADMIN ||
-										geo.properties?.BRK_NAME;
+					<Geographies key={guessedHash} geography={geoUrl}>
+						{({ geographies }) => {
+							return geographies.map((geo, index) => {
+								const country = getCountryFromGeo(geo);
+								const countryName =
+									country?.name.common ||
+									geo.properties?.NAME ||
+									geo.properties?.name ||
+									geo.properties?.ADMIN ||
+									geo.properties?.BRK_NAME;
 
-									// Removed country-specific debug checks
+								// Removed country-specific debug checks
 
-									// Calculate fill color directly using new palette
-									let fillColor: string;
-									if (country?.guessed) {
-										fillColor = 'hsl(var(--geo-green))'; // #2ECC71
-									} else if (country) {
-										fillColor =
-											'hsl(var(--geo-blue) / 0.3)'; // Light blue for unguessed
-									} else if (region !== 'all-world') {
-										fillColor =
-											'hsl(var(--muted-foreground) / 0.1)';
-									} else {
-										fillColor =
-											'hsl(var(--geo-blue) / 0.2)';
-									}
+								// Calculate fill color directly using new palette
+								let fillColor: string;
+								if (country?.guessed) {
+									fillColor = 'hsl(var(--geo-green))'; // #2ECC71
+								} else if (country) {
+									fillColor = 'hsl(var(--geo-blue) / 0.3)'; // Light blue for unguessed
+								} else if (region !== 'all-world') {
+									fillColor =
+										'hsl(var(--muted-foreground) / 0.1)';
+								} else {
+									fillColor = 'hsl(var(--geo-blue) / 0.2)';
+								}
 
-									return (
-										<Tooltip
-											key={`${geo.rsmKey}-${
-												country?.guessed
-													? 'guessed'
-													: 'unguessed'
-											}`}
-										>
-											<TooltipTrigger asChild>
-												<Geography
-													key={`geo-${geo.rsmKey}-${
-														country?.guessed
-															? 'guessed'
-															: 'unguessed'
-													}`}
-													geography={geo}
-													onMouseEnter={() =>
-														handleMouseEnter(geo)
-													}
-													onMouseLeave={
-														handleMouseLeave
-													}
-													style={{
-														default: {
-															fill: fillColor,
-															stroke: 'hsl(var(--background))',
-															strokeWidth: 0.5,
-															outline: 'none',
-															transition:
-																'fill 0.4s ease-in-out, stroke-width 0.2s ease',
-														},
-														hover: {
-															fill: country?.guessed
-																? 'hsl(var(--geo-green) / 0.9)'
-																: country
-																? 'hsl(var(--geo-orange))'
-																: 'hsl(var(--muted-foreground) / 0.3)',
-															stroke: 'hsl(var(--geo-dark))',
-															strokeWidth: 1.5,
-															outline: 'none',
-														},
-														pressed: {
-															fill: country?.guessed
-																? 'hsl(var(--geo-green))'
-																: country
-																? 'hsl(var(--geo-orange) / 0.9)'
-																: 'hsl(var(--muted-foreground) / 0.3)',
-															stroke: 'hsl(var(--geo-dark))',
-															strokeWidth: 1.5,
-															outline: 'none',
-														},
-													}}
-												/>
-											</TooltipTrigger>
-											{tooltipContent &&
-												hoveredCountry ===
-													countryName && (
-													<TooltipContent>
-														<p className="font-medium">
-															{tooltipContent}
+								return (
+									<Tooltip
+										key={`${geo.rsmKey}-${
+											country?.guessed
+												? 'guessed'
+												: 'unguessed'
+										}`}
+									>
+										<TooltipTrigger asChild>
+											<Geography
+												key={`geo-${geo.rsmKey}-${
+													country?.guessed
+														? 'guessed'
+														: 'unguessed'
+												}`}
+												geography={geo}
+												onMouseEnter={() =>
+													handleMouseEnter(geo)
+												}
+												onMouseLeave={handleMouseLeave}
+												style={{
+													default: {
+														fill: fillColor,
+														stroke: 'hsl(var(--background))',
+														strokeWidth: 0.5,
+														outline: 'none',
+														transition:
+															'fill 0.4s ease-in-out, stroke-width 0.2s ease',
+													},
+													hover: {
+														fill: country?.guessed
+															? 'hsl(var(--geo-green) / 0.9)'
+															: country
+															? 'hsl(var(--geo-orange))'
+															: 'hsl(var(--muted-foreground) / 0.3)',
+														stroke: 'hsl(var(--geo-dark))',
+														strokeWidth: 1.5,
+														outline: 'none',
+													},
+													pressed: {
+														fill: country?.guessed
+															? 'hsl(var(--geo-green))'
+															: country
+															? 'hsl(var(--geo-orange) / 0.9)'
+															: 'hsl(var(--muted-foreground) / 0.3)',
+														stroke: 'hsl(var(--geo-dark))',
+														strokeWidth: 1.5,
+														outline: 'none',
+													},
+												}}
+											/>
+										</TooltipTrigger>
+										{tooltipContent &&
+											hoveredCountry === countryName && (
+												<TooltipContent>
+													<p className="font-medium">
+														{tooltipContent}
+													</p>
+													{country?.guessed && (
+														<p className="text-xs text-green-400">
+															✓ Guessed
 														</p>
-														{country?.guessed && (
-															<p className="text-xs text-green-400">
-																✓ Guessed
-															</p>
-														)}
-													</TooltipContent>
-												)}
-										</Tooltip>
-									);
-								});
-							}}
-						</Geographies>
-					</ZoomableGroup>
+													)}
+												</TooltipContent>
+											)}
+									</Tooltip>
+								);
+							});
+						}}
+					</Geographies>
 				</ComposableMap>
 			</TooltipProvider>
 		</div>
