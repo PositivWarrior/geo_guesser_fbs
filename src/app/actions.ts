@@ -38,9 +38,22 @@ async function fetchCountries(url: string): Promise<Country[]> {
 }
 
 export async function getCountriesByRegion(region: string): Promise<Country[]> {
-	if (region === 'all-world') {
-		return await fetchCountries('https://restcountries.com/v3.1/all');
-	}
+    if (region === 'all-world') {
+        // Some environments have issues with the /all endpoint.
+        // Fetch by regions in parallel and merge results.
+        const [africa, americas, asia, europe, oceania] = await Promise.all([
+            fetchCountries('https://restcountries.com/v3.1/region/africa'),
+            fetchCountries('https://restcountries.com/v3.1/region/americas'),
+            fetchCountries('https://restcountries.com/v3.1/region/asia'),
+            fetchCountries('https://restcountries.com/v3.1/region/europe'),
+            fetchCountries('https://restcountries.com/v3.1/region/oceania'),
+        ]);
+        const map = new Map<string, Country>();
+        for (const c of [...africa, ...americas, ...asia, ...europe, ...oceania]) {
+            map.set(c.cca3, c);
+        }
+        return Array.from(map.values());
+    }
 	if (region === 'asia-oceania') {
 		const asia = await fetchCountries(
 			'https://restcountries.com/v3.1/region/asia',

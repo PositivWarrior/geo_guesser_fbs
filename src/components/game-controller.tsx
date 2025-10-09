@@ -24,6 +24,9 @@ import { GameEndDialog } from './game-end-dialog';
 import { ContinentSelector } from './continent-selector';
 import { Compass } from './icons';
 import { Country } from '@/lib/types';
+import { saveScore } from '@/lib/scores';
+import { useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import { Skeleton } from './ui/skeleton';
 import {
 	Collapsible,
@@ -33,17 +36,22 @@ import {
 
 type GameState = 'menu' | 'loading' | 'playing' | 'paused' | 'finished';
 
-const GameController = () => {
+interface GameControllerProps {
+    initialContinentId?: string;
+}
+
+const GameController = ({ initialContinentId }: GameControllerProps) => {
 	const [gameState, setGameState] = useState<GameState>('menu');
 	const [currentContinent, setCurrentContinent] = useState<Continent | null>(
 		null,
 	);
 	const [targetCountries, setTargetCountries] = useState<Country[]>([]);
-	const [timeLeft, setTimeLeft] = useState(0);
-	const [isChallengeMode] = useState(false);
+    const [timeLeft, setTimeLeft] = useState(0);
+    const [isChallengeMode] = useState(false);
 	const [inputValue, setInputValue] = useState('');
-	const [showCountriesList, setShowCountriesList] = useState(false);
-	const { toast } = useToast();
+    const [showCountriesList, setShowCountriesList] = useState(false);
+    const { toast } = useToast();
+    const router = useRouter();
 
 	const unlockedContinents = [
 		'Europe',
@@ -156,25 +164,52 @@ const GameController = () => {
 		setTargetCountries([]);
 	};
 
-	const guessedCount = targetCountries.filter((c) => c.guessed).length;
-	const total = targetCountries.length;
+    const guessedCount = targetCountries.filter((c) => c.guessed).length;
+    const total = targetCountries.length;
+    const savedOnceRef = useRef(false);
 
-	useEffect(() => {
-		if (gameState === 'playing' && timeLeft > 0) {
-			const timer = setInterval(() => {
-				setTimeLeft((prev) => prev - 1);
-			}, 1000);
-			return () => clearInterval(timer);
-		} else if (gameState === 'playing' && timeLeft === 0 && total > 0) {
-			setGameState('finished');
-		}
-	}, [gameState, timeLeft, total]);
+    useEffect(() => {
+        if (gameState === 'playing' && timeLeft > 0) {
+            const timer = setInterval(() => {
+                setTimeLeft((prev) => prev - 1);
+            }, 1000);
+            return () => clearInterval(timer);
+        } else if (gameState === 'playing' && timeLeft === 0 && total > 0) {
+            setGameState('finished');
+        }
+    }, [gameState, timeLeft, total]);
 
-	useEffect(() => {
-		if (gameState === 'playing' && total > 0 && guessedCount === total) {
-			setGameState('finished');
-		}
-	}, [guessedCount, total, gameState]);
+    useEffect(() => {
+        if (gameState === 'playing' && total > 0 && guessedCount === total) {
+            setGameState('finished');
+        }
+    }, [guessedCount, total, gameState]);
+
+    // Persist a score once when the game finishes
+    useEffect(() => {
+        if (gameState !== 'finished') return;
+        if (!currentContinent) return;
+        if (savedOnceRef.current) return;
+        savedOnceRef.current = true;
+        saveScore({
+            continentId: currentContinent.id,
+            continentName: currentContinent.name,
+            score: guessedCount,
+            total,
+            timeTaken: currentContinent.time - timeLeft,
+        });
+    }, [gameState, currentContinent, guessedCount, total, timeLeft]);
+
+    // Auto-start if an initial continent is provided via query param
+    useEffect(() => {
+        if (!initialContinentId) return;
+        // Don’t auto-start if already started
+        if (gameState !== 'menu') return;
+        const found = continents.find((c) => c.id === initialContinentId);
+        if (found) {
+            startGame(found);
+        }
+    }, [initialContinentId, gameState]);
 
 	if (gameState === 'menu') {
 		return (
@@ -229,23 +264,23 @@ const GameController = () => {
 					onMenu={resetGame}
 				/>
 			)}
-			<header className="flex justify-between items-center gap-4 p-3 rounded-xl bg-gradient-to-r from-primary/10 via-background/40 to-accent/10 border border-border/50 shadow-sm flex-shrink-0">
-				<div className="flex items-center gap-3">
-					<Compass className="w-8 h-8 text-primary" />
-					<h1 className="text-2xl sm:text-3xl font-headline font-bold tracking-tighter bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-						GeoGuesser
-					</h1>
-				</div>
-				<Button
-					onClick={resetGame}
-					variant="outline"
-					size="sm"
-					className="bg-card/80 border-border/60 shadow-sm"
-				>
-					<ArrowLeft className="mr-2 h-4 w-4" />
-					Menu
-				</Button>
-			</header>
+            <header className="flex justify-between items-center gap-4 p-3 rounded-xl bg-gradient-to-r from-primary/10 via-background/40 to-accent/10 border border-border/50 shadow-sm flex-shrink-0">
+                <div className="flex items-center gap-3">
+                    <Compass className="w-8 h-8 text-primary" />
+                    <h1 className="text-2xl sm:text-3xl font-headline font-bold tracking-tighter bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                        GeoGuesser
+                    </h1>
+                </div>
+                <Button
+                    onClick={() => { resetGame(); router.push('/play'); }}
+                    variant="outline"
+                    size="sm"
+                    className="bg-card/80 border-border/60 shadow-sm"
+                >
+                    <ArrowLeft className="mr-2 h-4 w-4" />
+                    Back
+                </Button>
+            </header>
 			<div className="grid grid-cols-2 gap-3 flex-shrink-0">
 				<div className="flex flex-col items-center justify-center p-3 rounded-xl bg-gradient-to-br from-accent/20 to-accent/10 border-2 border-accent/30 shadow-md">
 					<Timer className="w-6 h-6 mb-1 text-accent" />
@@ -273,14 +308,14 @@ const GameController = () => {
 				</div>
 			</div>
 
-			<div className="flex-1 grid grid-cols-1 lg:grid-cols-2 gap-4 min-h-0">
-				<div className="flex flex-col gap-2 min-h-0">
-					<div className="flex-1 min-h-0">
-						<WorldMap
-							countries={targetCountries}
-							region={currentContinent?.id}
-						/>
-					</div>
+            <div className="flex-1 grid grid-cols-1 lg:grid-cols-2 gap-4 min-h-0">
+                <div className="flex flex-col gap-2 min-h-0">
+                    <div className="flex-1 min-h-[320px] sm:min-h-[380px] lg:min-h-0">
+                        <WorldMap
+                            countries={targetCountries}
+                            region={currentContinent?.id}
+                        />
+                    </div>
 					<div className="flex items-center justify-center gap-4 text-xs text-muted-foreground">
 						<div className="flex items-center gap-1.5">
 							<span className="inline-block h-2.5 w-2.5 rounded-full bg-[hsl(var(--geo-green))]" />

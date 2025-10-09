@@ -114,7 +114,7 @@ export function ContinentSelector({
 			</Card>
 
 			{/* Features Info */}
-			<div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
+			<div className="hidden grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
 				<div className="p-6 rounded-xl bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20">
 					<div className="text-4xl mb-2">⏱️</div>
 					<h3 className="font-bold text-lg mb-1">Timed Challenge</h3>
