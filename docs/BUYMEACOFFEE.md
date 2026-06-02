@@ -16,14 +16,19 @@ Each continent is a **separate** support (no Whole World bundle yet).
 ### 1. Firebase service account (for webhook writes)
 
 1. Firebase Console → **Project settings** → **Service accounts**.
-2. **Generate new private key** → save JSON.
-3. In `.env.local` (single line, minified JSON):
+2. **Generate new private key** → open the downloaded JSON.
+3. Add to `.env.local` (recommended for **Vercel** — no JSON file upload):
 
    ```env
-   FIREBASE_SERVICE_ACCOUNT_JSON={"type":"service_account",...}
+   FIREBASE_CLIENT_EMAIL=firebase-adminsdk-xxx@your-project.iam.gserviceaccount.com
+   FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\nMIIE...\n-----END PRIVATE KEY-----\n"
    ```
 
-4. Deploy the same variable to Vercel / App Hosting.
+   Use the `client_email` and `private_key` fields from the JSON. Keep `\n` as two characters in the string (not real line breaks). `project_id` comes from your existing `NEXT_PUBLIC_FIREBASE_PROJECT_ID`.
+
+4. On **Vercel** → Project → **Settings** → **Environment Variables** — add the same two keys for Production (and Preview if needed). Do not paste the whole JSON as one variable unless you use the legacy option below.
+
+   **Legacy (local only):** `FIREBASE_SERVICE_ACCOUNT_JSON=` with the entire JSON minified on one line.
 
 ### 2. Firestore rules
 

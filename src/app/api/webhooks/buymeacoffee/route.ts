@@ -131,7 +131,10 @@ export async function POST(request: Request) {
 	const granted = await grantPaidRegion(uid, region, email || undefined);
 	if (!granted) {
 		return NextResponse.json(
-			{ error: 'Grant failed — configure FIREBASE_SERVICE_ACCOUNT_JSON' },
+			{
+				error:
+					'Grant failed — configure FIREBASE_CLIENT_EMAIL and FIREBASE_PRIVATE_KEY on the server',
+			},
 			{ status: 503 },
 		);
 	}

@@ -46,5 +46,24 @@ if (missing.length > 0) {
 	process.exit(1);
 }
 
-console.log('\nAll Firebase environment variables are set.');
+console.log('\nAll Firebase client environment variables are set.');
+
+const adminEmail = process.env.FIREBASE_CLIENT_EMAIL?.trim();
+const adminKey = process.env.FIREBASE_PRIVATE_KEY?.trim();
+const adminJson = process.env.FIREBASE_SERVICE_ACCOUNT_JSON?.trim();
+
+console.log('\nFirebase Admin (webhooks):');
+if (adminEmail && adminKey) {
+	console.log(`  ✓ FIREBASE_CLIENT_EMAIL=${adminEmail}`);
+	console.log(
+		`  ✓ FIREBASE_PRIVATE_KEY=…${adminKey.slice(-20)} (${adminKey.length} chars)`,
+	);
+} else if (adminJson) {
+	console.log(`  ✓ FIREBASE_SERVICE_ACCOUNT_JSON (${adminJson.length} chars)`);
+} else {
+	console.log('  ✗ FIREBASE_CLIENT_EMAIL + FIREBASE_PRIVATE_KEY (or FIREBASE_SERVICE_ACCOUNT_JSON)');
+	console.log('    Required for Buy Me a Coffee webhook unlocks on the server.');
+	process.exit(1);
+}
+
 process.exit(0);

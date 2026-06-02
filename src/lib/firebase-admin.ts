@@ -3,23 +3,46 @@ import type { PaidRegion } from './bmc';
 
 const ENTITLEMENTS_COLLECTION = 'user_entitlements';
 
-function initAdmin(): admin.app.App | null {
-	if (admin.apps.length > 0) {
-		return admin.app();
+function getServiceAccountFromEnv(): admin.ServiceAccount | null {
+	const projectId =
+		process.env.FIREBASE_PROJECT_ID?.trim() ||
+		process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID?.trim();
+	const clientEmail = process.env.FIREBASE_CLIENT_EMAIL?.trim();
+	const privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n');
+
+	if (projectId && clientEmail && privateKey) {
+		return { projectId, clientEmail, privateKey };
 	}
+
 	const raw = process.env.FIREBASE_SERVICE_ACCOUNT_JSON?.trim();
 	if (!raw) {
 		return null;
 	}
 	try {
-		const serviceAccount = JSON.parse(raw) as admin.ServiceAccount;
-		return admin.initializeApp({
-			credential: admin.credential.cert(serviceAccount),
-		});
+		return JSON.parse(raw) as admin.ServiceAccount;
 	} catch (e) {
 		console.error('Failed to parse FIREBASE_SERVICE_ACCOUNT_JSON', e);
 		return null;
 	}
+}
+
+function initAdmin(): admin.app.App | null {
+	if (admin.apps.length > 0) {
+		return admin.app();
+	}
+
+	const serviceAccount = getServiceAccountFromEnv();
+	if (!serviceAccount) {
+		return null;
+	}
+
+	return admin.initializeApp({
+		credential: admin.credential.cert(serviceAccount),
+	});
+}
+
+export function isFirebaseAdminConfigured(): boolean {
+	return getServiceAccountFromEnv() !== null;
 }
 
 export type UserEntitlements = {
@@ -37,7 +60,7 @@ export async function grantPaidRegion(
 	const app = initAdmin();
 	if (!app) {
 		console.error(
-			'Firebase Admin not configured — set FIREBASE_SERVICE_ACCOUNT_JSON',
+			'Firebase Admin not configured — set FIREBASE_CLIENT_EMAIL and FIREBASE_PRIVATE_KEY (or FIREBASE_SERVICE_ACCOUNT_JSON)',
 		);
 		return false;
 	}
