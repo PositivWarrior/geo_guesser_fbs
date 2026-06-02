@@ -1,15 +1,23 @@
-'use client';
+import { Suspense } from 'react';
+import { Loader2 } from 'lucide-react';
+import PlayPageClient from './play-client';
+import { PlayShell } from '@/components/play/play-shell';
 
-import { useSearchParams } from 'next/navigation';
-import GameController from '@/components/game-controller';
+function PlayLoading() {
+	return (
+		<PlayShell variant="game">
+			<div className="flex min-h-[60vh] flex-col items-center justify-center gap-4">
+				<Loader2 className="h-12 w-12 animate-spin text-primary" />
+				<p className="text-muted-foreground text-sm">Preparing game…</p>
+			</div>
+		</PlayShell>
+	);
+}
 
 export default function PlayPage() {
-	const params = useSearchParams();
-	const initialContinentId = params.get('continent') ?? undefined;
-
 	return (
-		<main className="flex min-h-screen flex-col pt-6 pb-6">
-			<GameController initialContinentId={initialContinentId} />
-		</main>
+		<Suspense fallback={<PlayLoading />}>
+			<PlayPageClient />
+		</Suspense>
 	);
 }

@@ -1,0 +1,76 @@
+# Buy Me a Coffee — unlock Americas & Africa
+
+Profile: [buymeacoffee.com/positivwarrior](https://buymeacoffee.com/positivwarrior)
+
+## How it works
+
+1. Player **signs in with Google** in the game.
+2. Clicks **The Americas** or **Africa** → copies unlock code `geo:{uid}:americas` or `geo:{uid}:africa`.
+3. Pays **$3+** on Buy Me a Coffee and **pastes the code in the message field**.
+4. Webhook grants access in Firestore → player clicks **I've paid — refresh**.
+
+Each continent is a **separate** support (no Whole World bundle yet).
+
+## Setup (one-time)
+
+### 1. Firebase service account (for webhook writes)
+
+1. Firebase Console → **Project settings** → **Service accounts**.
+2. **Generate new private key** → save JSON.
+3. In `.env.local` (single line, minified JSON):
+
+   ```env
+   FIREBASE_SERVICE_ACCOUNT_JSON={"type":"service_account",...}
+   ```
+
+4. Deploy the same variable to Vercel / App Hosting.
+
+### 2. Firestore rules
+
+Publish `firestore.rules` from the repo (adds `user_entitlements` read-only for owners).
+
+### 3. Buy Me a Coffee webhook
+
+1. [BMC Dashboard](https://studio.buymeacoffee.com) → your page → **Webhooks** (or API settings).
+2. Create webhook URL: `https://YOUR-DOMAIN.com/api/webhooks/buymeacoffee`
+3. Copy the **webhook secret** → `.env.local`:
+
+   ```env
+   BMC_WEBHOOK_SECRET=your_secret_here
+   BMC_MIN_SUPPORT_USD=3
+   ```
+
+4. Enable events for new supports / payments.
+
+### 4. Optional: dedicated Extras (cleaner than message codes)
+
+Create two **Extras** on BMC:
+
+- "Unlock The Americas"
+- "Unlock Africa"
+
+Set env URLs:
+
+```env
+NEXT_PUBLIC_BMC_AMERICAS_URL=https://buymeacoffee.com/positivwarrior/extras/...
+NEXT_PUBLIC_BMC_AFRICA_URL=https://buymeacoffee.com/positivwarrior/extras/...
+BMC_EXTRA_ID_AMERICAS=123
+BMC_EXTRA_ID_AFRICA=456
+```
+
+The webhook also matches extras by title containing "America" / "Africa".
+
+## Local testing
+
+Webhook needs a public URL. Use [ngrok](https://ngrok.com/) or deploy preview:
+
+```bash
+ngrok http 9002
+# Point BMC webhook to https://xxxx.ngrok.io/api/webhooks/buymeacoffee
+```
+
+## Security
+
+- Webhook verifies `x-signature-sha256` with `BMC_WEBHOOK_SECRET`.
+- Minimum amount `BMC_MIN_SUPPORT_USD` (default 3).
+- Unlock code must include Firebase `uid` from signed-in user.

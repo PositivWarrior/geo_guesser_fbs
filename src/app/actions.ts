@@ -1,18 +1,9 @@
 'use server';
-import { shouldPauseTimer } from '@/ai/flows/dynamic-challenge-timer-control';
 import type { Country } from '@/lib/types';
 
+/** Pause is disabled only in challenge mode (future feature). */
 export async function checkPauseAbility(isChallengeMode: boolean) {
-	try {
-		const result = await shouldPauseTimer({
-			challengeEnabled: isChallengeMode,
-		});
-		return result;
-	} catch (error) {
-		console.error('AI flow error:', error);
-		// In case of an AI error, default to allowing the pause to not disrupt the user experience.
-		return { pauseTimer: true };
-	}
+	return { pauseTimer: !isChallengeMode };
 }
 
 async function fetchCountries(url: string): Promise<Country[]> {

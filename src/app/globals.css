@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 body {
-	font-family: 'Nunito', sans-serif;
+	font-family: 'Inter', 'Nunito', sans-serif;
 }
 
 @layer base {
@@ -121,4 +121,107 @@ body {
 .country.locked {
 	@apply cursor-not-allowed;
 	fill: hsl(var(--geo-dark) / 0.5);
+}
+
+/* Landing page motion */
+@keyframes landing-float {
+	0%,
+	100% {
+		transform: translateY(0) rotate(0deg);
+	}
+	50% {
+		transform: translateY(-12px) rotate(2deg);
+	}
+}
+
+@keyframes landing-orbit {
+	from {
+		transform: rotate(0deg);
+	}
+	to {
+		transform: rotate(360deg);
+	}
+}
+
+@keyframes landing-pulse-glow {
+	0%,
+	100% {
+		opacity: 0.35;
+		transform: scale(1);
+	}
+	50% {
+		opacity: 0.65;
+		transform: scale(1.08);
+	}
+}
+
+@keyframes landing-shimmer {
+	0% {
+		background-position: 200% center;
+	}
+	100% {
+		background-position: -200% center;
+	}
+}
+
+@keyframes landing-fade-up {
+	from {
+		opacity: 0;
+		transform: translateY(16px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+@keyframes landing-drift {
+	0%,
+	100% {
+		transform: translate(0, 0);
+	}
+	33% {
+		transform: translate(8px, -6px);
+	}
+	66% {
+		transform: translate(-6px, 4px);
+	}
+}
+
+@layer utilities {
+	.landing-glass {
+		@apply bg-card/40 backdrop-blur-xl border border-white/10 shadow-xl;
+	}
+	.landing-glass-strong {
+		@apply bg-card/55 backdrop-blur-2xl border border-white/15 shadow-2xl;
+	}
+	.animate-landing-float {
+		animation: landing-float 5s ease-in-out infinite;
+	}
+	.animate-landing-orbit {
+		animation: landing-orbit 24s linear infinite;
+	}
+	.animate-landing-pulse-glow {
+		animation: landing-pulse-glow 4s ease-in-out infinite;
+	}
+	.animate-landing-fade-up {
+		animation: landing-fade-up 0.7s ease-out forwards;
+	}
+	.animate-landing-drift {
+		animation: landing-drift 8s ease-in-out infinite;
+	}
+	.animate-landing-shimmer {
+		background-size: 200% auto;
+		animation: landing-shimmer 4s linear infinite;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.animate-landing-float,
+	.animate-landing-orbit,
+	.animate-landing-pulse-glow,
+	.animate-landing-drift,
+	.animate-landing-shimmer {
+		animation: none;
+	}
 }

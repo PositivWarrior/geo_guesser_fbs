@@ -12,5 +12,5 @@ export const continents: Continent[] = [
   { id: "asia-oceania", name: "Asia & Oceania", time: 720, icon: Mountain },
   { id: "americas", name: "The Americas", time: 600, icon: LandPlot },
   { id: "africa", name: "Africa", time: 540, icon: Sun },
-  { id: "all-world", name: "Whole World", time: 900, icon: Globe },
+  { id: "all-world", name: "Whole World", time: 720, icon: Globe },
 ];
