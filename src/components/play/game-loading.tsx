@@ -1,36 +1,41 @@
 'use client';
 
-import { Loader2, Map } from 'lucide-react';
-import { Skeleton } from '@/components/ui/skeleton';
-import { PlayShell } from './play-shell';
-import { PlayNav } from './play-nav';
+import { Loader2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { ArrowLeft } from 'lucide-react';
 
 type GameLoadingProps = {
 	regionName?: string;
-	onBack?: () => void;
+	onBack: () => void;
 };
 
 export function GameLoading({ regionName, onBack }: GameLoadingProps) {
 	return (
-		<PlayShell variant="game">
-			<PlayNav backLabel="Lobby" onBack={onBack} />
-			<div className="flex flex-col items-center justify-center min-h-[70vh] px-4 pb-12">
-				<div className="landing-glass-strong w-full max-w-lg rounded-3xl p-8 sm:p-10 text-center space-y-6">
-					<div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/15 border border-primary/30 mx-auto">
-						<Map className="h-7 w-7 text-primary animate-pulse" />
-					</div>
-					<div className="space-y-2">
-						<h2 className="text-2xl sm:text-3xl font-headline font-bold">
-							Deploying to {regionName ?? 'region'}…
-						</h2>
-						<p className="text-sm text-muted-foreground">
-							Loading countries and calibrating the map
-						</p>
-					</div>
-					<Loader2 className="w-12 h-12 animate-spin text-primary mx-auto" />
-					<Skeleton className="h-48 sm:h-56 w-full rounded-2xl landing-glass" />
-				</div>
+		<div className="w-full max-w-lg mx-auto px-3 py-4 min-h-[100dvh] flex flex-col justify-center">
+			<Button
+				variant="ghost"
+				size="sm"
+				className="mb-4 -ml-2 text-muted-foreground"
+				onClick={onBack}
+			>
+				<ArrowLeft className="h-4 w-4 mr-1" />
+				Lobby
+			</Button>
+			<div className="flex min-h-[50vh] flex-col items-center justify-center gap-4 game-panel-strong rounded-2xl p-8">
+				<Loader2 className="h-12 w-12 animate-spin text-primary" />
+				<p className="text-muted-foreground text-sm text-center">
+					Deploying mission
+					{regionName ? (
+						<>
+							{' '}
+							<span className="text-foreground font-semibold">
+								{regionName}
+							</span>
+						</>
+					) : null}
+					…
+				</p>
 			</div>
-		</PlayShell>
+		</div>
 	);
 }

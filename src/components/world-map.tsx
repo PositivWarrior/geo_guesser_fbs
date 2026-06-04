@@ -15,6 +15,8 @@ interface WorldMapProps {
 	countries: Country[];
 	onCountryHover?: (countryName: string | null) => void;
 	region?: string | null;
+	/** Fills parent with map aligned to top (game screen) */
+	layout?: 'card' | 'fill';
 }
 
 const geoUrl = 'https://unpkg.com/world-atlas@2/countries-110m.json';
@@ -23,6 +25,7 @@ export function WorldMap({
 	countries,
 	onCountryHover,
 	region = 'all-world',
+	layout = 'card',
 }: WorldMapProps) {
 	const [tooltipContent, setTooltipContent] = useState<string | null>(null);
 	const [hoveredCountry, setHoveredCountry] = useState<string | null>(null);
@@ -227,16 +230,28 @@ export function WorldMap({
 	);
 
 	const getMapConfig = () => {
+		const fill = layout === 'fill';
 		const configs = {
-			europe: { center: [25, 55] as [number, number], scale: 700 },
-			'asia-oceania': {
-				center: [90, 5] as [number, number],
-				scale: 330,
+			europe: {
+				center: [15, fill ? 38 : 55] as [number, number],
+				scale: fill ? 1040 : 800,
 			},
-			// Move projection center north (positive) to shift map down and create more top margin
-			africa: { center: [16, 2] as [number, number], scale: 420 },
-			americas: { center: [-90, 10] as [number, number], scale: 260 },
-			'all-world': { center: [10, 0] as [number, number], scale: 210 },
+			'asia-oceania': {
+				center: [92, fill ? 10 : 5] as [number, number],
+				scale: fill ? 300 : 330,
+			},
+			africa: {
+				center: [18, fill ? 0 : 2] as [number, number],
+				scale: fill ? 380 : 420,
+			},
+			americas: {
+				center: [-92, fill ? 8 : 10] as [number, number],
+				scale: fill ? 240 : 260,
+			},
+			'all-world': {
+				center: [12, fill ? 2 : 0] as [number, number],
+				scale: fill ? 185 : 210,
+			},
 		};
 
 		const key = region as keyof typeof configs;
@@ -266,16 +281,32 @@ export function WorldMap({
 		.sort()
 		.join(',');
 
+	const isFill = layout === 'fill';
+
 	return (
-		<div className="w-full h-full bg-background/30 rounded-lg border border-border/20 overflow-hidden shadow-lg shadow-black/20 p-3 sm:p-4">
+		<div
+			className={
+				isFill
+					? 'w-full h-full overflow-hidden bg-transparent'
+					: 'w-full h-full bg-background/30 rounded-lg border border-border/20 overflow-hidden shadow-lg shadow-black/20 p-3 sm:p-4'
+			}
+		>
 			<TooltipProvider delayDuration={100}>
 				<ComposableMap
 					projectionConfig={{
 						scale: mapConfig.scale,
 						center: mapConfig.center,
 					}}
-					className="w-full h-full"
+					className={isFill ? 'w-full h-full block' : 'w-full h-full'}
 					preserveAspectRatio="xMidYMid meet"
+					style={
+						isFill
+							? {
+									transform: 'scale(0.92)',
+									transformOrigin: '50% 50%',
+								}
+							: undefined
+					}
 				>
 					<Geographies key={guessedHash} geography={geoUrl}>
 						{({ geographies }) => {
@@ -336,8 +367,8 @@ export function WorldMap({
 														fill: country?.guessed
 															? 'hsl(var(--geo-green) / 0.9)'
 															: country
-															? 'hsl(var(--geo-orange))'
-															: 'hsl(var(--geo-blue) / 0.4)',
+																? 'hsl(var(--geo-orange))'
+																: 'hsl(var(--geo-blue) / 0.4)',
 														stroke: 'hsl(var(--geo-dark))',
 														strokeWidth: 1.0,
 														outline: 'none',
@@ -346,8 +377,8 @@ export function WorldMap({
 														fill: country?.guessed
 															? 'hsl(var(--geo-green))'
 															: country
-															? 'hsl(var(--geo-orange) / 0.9)'
-															: 'hsl(var(--muted-foreground) / 0.3)',
+																? 'hsl(var(--geo-orange) / 0.9)'
+																: 'hsl(var(--muted-foreground) / 0.3)',
 														stroke: 'hsl(var(--geo-dark))',
 														strokeWidth: 1.0,
 														outline: 'none',

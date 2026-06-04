@@ -3,7 +3,6 @@
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from './firebase';
 import { isFirebaseConfigured } from './firebase-config';
-import type { PaidRegion } from './bmc';
 
 export type ClientEntitlements = {
 	americas: boolean;
@@ -32,5 +31,3 @@ export async function fetchUserEntitlements(
 		return empty;
 	}
 }
-
-export type { PaidRegion };
